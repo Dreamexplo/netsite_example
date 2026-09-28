@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>林澈 · 创意技术工程师 | 周天子九驾</title>
+<style>
+:root{
+  --accent:#d9a441; --accent2:#f0d79a; --glow:rgba(217,164,65,.38);
+  --text:#f4ece1; --muted:#b7a691; --line:rgba(255,255,255,.12);
+  --skin:#cfae8a; --ink:#170f08; --sand:#a88252; --bronze:#8d7a5f;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:#100a06; color:var(--text); overflow:hidden;
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+canvas#bg{position:fixed;inset:0;display:block;z-index:0;background:#100a06;cursor:grab}
+canvas#bg.grabbing{cursor:grabbing}
+#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 88% at 50% 42%,rgba(0,0,0,0) 34%,rgba(20,10,3,.55) 74%,rgba(12,6,2,.9) 100%)}
+#grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/></filter><rect width='128' height='128' filter='url(%23n)'/></svg>")}
+#overlay{position:fixed;inset:0;z-index:2;pointer-events:none}
+#nav{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 30px;backdrop-filter:blur(10px);
+  background:linear-gradient(180deg,rgba(16,10,6,.8),rgba(16,10,6,0));
+  border-bottom:1px solid rgba(255,255,255,.05)}
+#logo{font-weight:800;letter-spacing:.16em;font-size:15px;display:flex;align-items:center;gap:10px}
+#logo i{width:10px;height:10px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 14px 3px var(--glow);display:inline-block;animation:pulse 2.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.55;transform:scale(.85)}50%{opacity:1;transform:scale(1.18)}}
+#nav ul{display:flex;gap:22px;list-style:none}
+#nav a{color:var(--muted);text-decoration:none;font-size:13px;letter-spacing:.07em;
+  transition:.25s;position:relative;padding:4px 2px;cursor:pointer}
+#nav a .tag{display:none;position:absolute;top:-8px;right:-14px;font-size:8px;letter-spacing:0;
+  color:#1a1108;background:var(--accent);border-radius:3px;padding:1px 3px;line-height:1.2}
+#nav a.p3d .tag{display:block}
+#nav a:hover{color:var(--accent2);text-shadow:0 0 12px var(--glow)}
+#nav a.on{color:var(--accent2)}
+#nav a.on::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--glow)}
+#hud{position:fixed;left:30px;bottom:26px;z-index:20;max-width:330px}
+#hud .badge{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.18em;
+  color:var(--accent2);border:1px solid rgba(217,164,65,.42);border-radius:999px;
+  padding:6px 14px;background:rgba(217,164,65,.08);margin-bottom:12px}
+#hud h1{font-size:40px;letter-spacing:.06em;line-height:1.08;font-weight:800;
+  text-shadow:0 6px 28px rgba(0,0,0,.75)}
+#hud h2{font-size:14.5px;letter-spacing:.3em;color:var(--accent2);margin:10px 0 12px;font-weight:600}
+#hud p{font-size:12.5px;line-height:1.75;color:var(--muted)}
+#hint{position:fixed;left:30px;bottom:6px;z-index:20;font-size:11.5px;letter-spacing:.08em;
+  color:rgba(183,166,145,.7)}
+#pageno{position:fixed;right:30px;bottom:26px;z-index:20;text-align:right;
+  font-size:11px;letter-spacing:.2em;color:rgba(183,166,145,.75)}
+#pageno b{display:block;font-size:26px;letter-spacing:.08em;color:var(--accent2);font-weight:800}
+#sectag{position:absolute;left:0;top:0;z-index:15;transform:translate(-50%,-100%);
+  padding:7px 13px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .18s;
+  background:rgba(20,13,6,.86);border:1px solid rgba(217,164,65,.45);
+  box-shadow:0 8px 26px rgba(0,0,0,.55);white-space:nowrap}
+#sectag b{font-size:13px;color:var(--accent2);letter-spacing:.12em;display:block}
+#sectag span{font-size:10px;color:var(--muted);letter-spacing:.06em}
+#hint3d{position:absolute;left:0;top:0;z-index:15;transform:translate(-50%,-100%);
+  padding:5px 10px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity .14s;
+  background:rgba(217,164,65,.9);color:#1a1108;font-size:11.5px;font-weight:700;
+  letter-spacing:.06em;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+#loader{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;background:#100a06;transition:opacity .9s}
+#loader .lg{font-size:15px;letter-spacing:.42em;color:var(--accent2);margin-bottom:22px}
+#loader .bar{width:230px;height:2px;background:rgba(255,255,255,.1);overflow:hidden;border-radius:2px}
+#loader .bar i{display:block;height:100%;width:38%;background:var(--accent);
+  box-shadow:0 0 16px var(--glow);animation:slide 1.25s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+#loader .sub{margin-top:16px;font-size:11px;letter-spacing:.2em;color:rgba(183,166,145,.65)}
+#fallback{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+  background:#100a06;text-align:center;padding:40px}
+#fallback.on{display:flex}
+#fallback div{max-width:520px}
+#fallback h3{font-size:20px;color:var(--accent2);letter-spacing:.1em;margin-bottom:14px}
+#fallback p{font-size:13px;line-height:1.9;color:var(--muted)}
+#a11y{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media(max-width:900px){
+  #nav ul{gap:14px}
+  #nav a{font-size:11.5px}
+  #hud{left:18px;bottom:70px;max-width:60%}
+  #hud h1{font-size:26px}
+  #hud p{display:none}
+  #hint{left:18px;font-size:10px}
+  #pageno{right:18px;bottom:70px}
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="vignette"></div>
+<div id="grain"></div>
+
+<div id="overlay">
+  <div id="sectag"><b></b><span></span></div>
+  <div id="hint3d"></div>
+</div>
+
+<nav id="nav">
+  <div id="logo"><i></i>林澈 · CHE LIN</div>
+  <ul>
+    <li><a data-key="home" class="on">首页</a></li>
+    <li><a data-key="about">关于</a></li>
+    <li><a data-key="skills">技能</a></li>
+    <li><a data-key="works">作品</a></li>
+    <li><a data-key="exp">经历</a></li>
+    <li><a data-key="contact">联系</a></li>
+  </ul>
+</nav>
+
+<div id="hud">
+  <div class="badge">WEBGL 场景 · 周天子九驾</div>
+  <h1>林澈 CHE LIN</h1>
+  <h2>创意技术工程师</h2>
+  <p id="huddesc">以九驾头车马为序，列阵而行。辚辚车声、猎猎旌旗与两千年前军阵，全部由浏览器实时渲染 —— 文案与导航已刻入器物，请转动视角自行发现。</p>
+</div>
+
+<div id="hint">滚轮 · 沿御道推进　|　拖拽 · 环视　|　点击器物 · 切换章节　|　1-6 · 直达</div>
+<div id="pageno"><b>壹</b><span id="pnlabel">首页 · 御道</span></div>
+
+<div id="loader">
+  <div class="lg">周 天 子 九 驾</div>
+  <div class="bar"><i></i></div>
+  <div class="sub">正在铸造车马 · 陶俑入列</div>
+</div>
+
+<div id="fallback"><div>
+  <h3>无法初始化 3D 场景</h3>
+  <p>本页依赖 WebGL 实时渲染。请使用支持 WebGL 的现代浏览器打开，或检查 lib/three.min.js 与 lib/OrbitControls.js 是否已随页面一同部署。</p>
+</div></div>
+
+<ul id="a11y">
+  <li><a href="#" data-key="home">首页 · 御道</a></li>
+  <li><a href="#" data-key="about">关于 · 天子头车</a></li>
+  <li><a href="#" data-key="skills">技能 · 九驾序列</a></li>
+  <li><a href="#" data-key="works">作品 · 御道旌旗</a></li>
+  <li><a href="#" data-key="exp">经历 · 兵马俑阵列</a></li>
+  <li><a href="#" data-key="contact">联系 · 九驾高台</a></li>
+</ul>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+(function(){
+  "use strict";
+  var hasTHREE = (typeof THREE !== "undefined" && THREE.WebGLRenderer);
+  var hasCtrl  = hasTHREE && !!THREE.OrbitControls;
+  if(!hasTHREE){
+    document.getElementById("fallback").classList.add("on");
+    document.getElementById("loader").style.display = "none";
+    return;
+  }
+
+  /* ---------------- 基础工具 ---------------- */
+  var PI2 = Math.PI * 2;
+  function rnd(a,b){ return a + Math.random()*(b-a); }
+  function rr(i){ return Math.random(); }
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function easeIO(t){ return t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+  var rad = Math.PI/180;
+
+  /* 贴图色板：暖沙 · 青铜 · 朱漆 */
+  var PAL = {
+    skyTop:"#20180f", skyMid:"#6d4c2a", skyLow:"#c08a4c", skyHaze:"#d8a869", sun:"#ffe6b0",
+    groundLo:"#6b5230", groundHi:"#b8925c", road:"#8d7048", ridge:"#4b3a22",
+    wood:"#7a4a24", woodDark:"#4e2c14", lacquer:"#96301f", bronze:"#8d7a5f",
+    bronzeHi:"#c9a659", cloth:"#8a6a3c", skin:"#cfae8a", hair:"#241f1a",
+    armor:"#7d6a52", armorDark:"#5d5245", robe:"#4b4439",
+    terracotta:"#b2a494", terracottaDk:"#8b7f70"
+  };
+
+  /* ---------------- 画布贴图工厂 ---------------- */
+  function mkCanvas(w,h){
+    var c = document.createElement("canvas"); c.width = w; c.height = h;
+    return c;
+  }
+  function toTex(c, rx, ry){
+    var t = new THREE.CanvasTexture(c);
+    t.anisotropy = 4;
+    if(rx || ry){ t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx||1, ry||1); }
+    return t;
+  }
+  function noiseFill(ctx, w, h, base, dots, alpha){
+    ctx.fillStyle = base; ctx.fillRect(0,0,w,h);
+    for(var i=0;i<dots;i++){
+      var v = Math.random();
+      ctx.fillStyle = "rgba(" + (v>.5?"255,240,214":"40,28,14") + "," + (Math.random()*alpha) + ")";
+      var s = Math.random()*3+0.6;
+      ctx.fillRect(Math.random()*w, Math.random()*h, s, s);
+    }
+  }
+  /* 陶土 / 青铜 / 漆面 条纹 */
+  function stripTexture(stops, rep){
+    var w = 64, h = 256, c = mkCanvas(w,h), ctx = c.getContext("2d");
+    var g = ctx.createLinearGradient(0,0,0,h);
+    for(var i=0;i<stops.length;i++) g.addColorStop(stops[i][0], stops[i][1]);
+    ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+    for(var k=0;k<340;k++){
+      ctx.fillStyle = "rgba(0,0,0," + (Math.random()*0.075) + ")";
+      ctx.fillRect(Math.random()*w, Math.random()*h, 1.4, Math.random()*10);
+    }
+    return toTex(c, 1, rep||1);
+  }
+  /* 文字贴图：支持标题 / 副标题 / 正文自动换行 */
+  function textTexture(o){
+    o = o || {};
+    var W = o.width || 1024, H = o.height || 512;
+    var c = mkCanvas(W,H), ctx = c.getContext("2d");
+    var accent = o.accent || "#d9a441";
+
+    ctx.clearRect(0,0,W,H);
+    if(o.bg !== false){
+      ctx.fillStyle = o.bg || "rgba(18,12,6,0.9)";
+      roundRect(ctx, 8, 8, W-16, H-16, 26); ctx.fill();
+    }
+    if(o.border !== false){
+      ctx.strokeStyle = "rgba(217,164,65,0.55)"; ctx.lineWidth = 3;
+      roundRect(ctx, 14, 14, W-28, H-28, 22); ctx.stroke();
+      ctx.strokeStyle = "rgba(217,164,65,0.18)"; ctx.lineWidth = 1;
+      roundRect(ctx, 26, 26, W-52, H-52, 16); ctx.stroke();
+    }
+
+    var padX = o.padX || 74, y = o.padTop || 96;
+    ctx.textBaseline = "alphabetic";
+
+    if(o.kicker){
+      ctx.fillStyle = accent;
+      ctx.font = "600 34px 'PingFang SC','Microsoft YaHei',sans-serif";
+      ctx.globalAlpha = .9;
+      ctx.fillText(o.kicker, padX, y - 44);
+      ctx.globalAlpha = 1;
+      ctx.fillRect(padX, y - 30, 76, 3);
+    }
+    if(o.title){
+      ctx.save();
+      ctx.shadowColor = "rgba(217,164,65,0.75)"; ctx.shadowBlur = 26;
+      ctx.fillStyle = "#f6efdd";
+      ctx.font = "800 " + (o.titleSize || 84) + "px 'PingFang SC','Microsoft YaHei',sans-serif";
+      ctx.fillText(o.title, padX, y + 46);
+      ctx.restore();
+      y += (o.titleSize || 84) * 0.62 + 52;
+    }
+    if(o.subtitle){
+      ctx.fillStyle = accent;
+      ctx.font = "600 " + (o.subSize || 40) + "px 'PingFang SC','Microsoft YaHei',sans-serif";
+      ctx.fillText(o.subtitle, padX, y);
+      y += (o.subSize || 40) + 22;
+    }
+    if(o.body){
+      ctx.fillStyle = o.bodyColor || "rgba(224,210,188,0.86)";
+      var fs = o.bodySize || 36;
+      ctx.font = "400 " + fs + "px 'PingFang SC','Microsoft YaHei',sans-serif";
+      var lines = wrapCN(ctx, o.body, W - padX*2);
+      for(var i=0;i<lines.length && y < H - 40; i++){
+        ctx.fillText(lines[i], padX, y);
+        y += fs + 14;
+      }
+    }
+    if(o.stamp){
+      ctx.save();
+      ctx.translate(W - 130, H - 108); ctx.rotate(-0.06);
+      ctx.strokeStyle = "rgba(200,60,40,0.85)"; ctx.lineWidth = 4;
+      roundRect(ctx, -66, -46, 132, 92, 8); ctx.stroke();
+      ctx.fillStyle = "rgba(200,60,40,0.9)";
+      ctx.font = "700 40px 'PingFang SC','Microsoft YaHei',sans-serif";
+      ctx.fillText(o.stamp, -46, 12);
+      ctx.restore();
+    }
+    return toTex(c);
+  }
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+  }
+  function wrapCN(ctx, str, maxW){
+    var out = [], cur = "";
+    for(var i=0;i<str.length;i++){
+      var ch = str.charAt(i);
+      if(ch === "\n"){ out.push(cur); cur = ""; continue; }
+      if(ctx.measureText(cur + ch).width > maxW && cur.length){
+        out.push(cur); cur = ch;
+      } else cur += ch;
+    }
+    if(cur) out.push(cur);
+    return out;
+  }
+  /* 旌旗贴图 */
+  function flagTexture(text, accent, base){
+    var W = 512, H = 360, c = mkCanvas(W,H), ctx = c.getContext("2d");
+    var g = ctx.createLinearGradient(0,0,W,H);
+    g.addColorStop(0, base || "#8f2c1c"); g.addColorStop(.55, "#a83a22"); g.addColorStop(1, "#6d1f13");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    for(var i=0;i<160;i++){
+      ctx.fillStyle = "rgba(0,0,0," + Math.random()*0.06 + ")";
+      ctx.fillRect(Math.random()*W, Math.random()*H, 6, 6);
+    }
+    ctx.strokeStyle = accent; ctx.lineWidth = 10; ctx.strokeRect(18,18,W-36,H-36);
+    ctx.fillStyle = accent;
+    ctx.font = "800 118px 'PingFang SC','Microsoft YaHei',sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 14;
+    ctx.fillText(text, W/2, H/2 + 6);
+    return toTex(c);
+  }
+  /* 天空 */
+  function skyTexture(){
+    var W = 32, H = 512, c = mkCanvas(W,H), ctx = c.getContext("2d");
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0.00, PAL.skyTop);
+    g.addColorStop(0.34, "#3c2a18");
+    g.addColorStop(0.56, PAL.skyMid);
+    g.addColorStop(0.74, PAL.skyLow);
+    g.addColorStop(0.86, PAL.skyHaze);
+    g.addColorStop(1.00, "#7d5c33");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    return toTex(c);
+  }
+  /* 日晕 */
+  function haloTexture(){
+    var S = 512, c = mkCanvas(S,S), ctx = c.getContext("2d");
+    var g = ctx.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+    g.addColorStop(0,   "rgba(255,240,205,1)");
+    g.addColorStop(0.12,"rgba(255,222,160,0.75)");
+    g.addColorStop(0.34,"rgba(226,160,84,0.30)");
+    g.addColorStop(0.66,"rgba(180,110,50,0.10)");
+    g.addColorStop(1,   "rgba(120,70,30,0)");
+    ctx.fillStyle = g; ctx.fillRect(0,0,S,S);
+    return toTex(c);
+  }
+  /* 御道地纹 */
+  function roadTexture(){
+    var W = 512, H = 1024, c = mkCanvas(W,H), ctx = c.getContext("2d");
+    noiseFill(ctx, W, H, PAL.road, 9000, 0.10);
+    ctx.fillStyle = "rgba(60,42,22,0.30)";
+    for(var i=0;i<26;i++){
+      ctx.fillRect(rnd(0,W), 0, rnd(1,4), H);
+    }
+    ctx.fillStyle = "rgba(40,28,14,0.16)";
+    for(var r=0;r<9;r++){
+      ctx.fillRect(0, r*(H/9) + rnd(-6,6), W, 2);
+    }
+    var g = ctx.createLinearGradient(0,0,W,0);
+    g.addColorStop(0,"rgba(20,12,4,0.55)"); g.addColorStop(.5,"rgba(0,0,0,0)");
+    g.addColorStop(1,"rgba(20,12,4,0.55)");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    return toTex(c, 1, 10);
+  }
+  /* 地面 */
+  function groundTexture(){
+    var S = 512, c = mkCanvas(S,S), ctx = c.getContext("2d");
+    noiseFill(ctx, S, S, PAL.groundLo, 12000, 0.09);
+    for(var i=0;i<900;i++){
+      ctx.fillStyle = "rgba(190,158,108," + Math.random()*0.12 + ")";
+      ctx.beginPath(); ctx.arc(Math.random()*S, Math.random()*S, Math.random()*2.4, 0, PI2); ctx.fill();
+    }
+    return toTex(c, 26, 26);
+  }
+  /* 陶俑表面（横向陶轮纹） */
+  function potteryTexture(){
+    var W = 128, H = 256, c = mkCanvas(W,H), ctx = c.getContext("2d");
+    noiseFill(ctx, W, H, PAL.terracotta, 2600, 0.14);
+    for(var i=0;i<26;i++){
+      ctx.fillStyle = "rgba(110,96,80," + (0.10+Math.random()*0.16) + ")";
+      ctx.fillRect(0, i*10 + rnd(-2,2), W, rnd(1,3));
+    }
+    return toTex(c, 1, 2);
+  }
+
+  /* ---------------- 渲染器 / 场景 ---------------- */
+  var canvas = document.getElementById("bg");
+  var renderer, scene, camera, controls;
+  try{
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
+  }catch(e){
+    document.getElementById("fallback").classList.add("on");
+    document.getElementById("loader").style.display = "none";
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.06;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x2a1d10);
+  scene.fog = new THREE.FogExp2(0xb98d55, 0.0135);
+
+  camera = new THREE.PerspectiveCamera(56, window.innerWidth/window.innerHeight, 0.1, 2600);
+  camera.position.set(7.5, 6.2, 34);
+
+  /* ---------------- 光照：黄昏侧逆光 ---------------- */
+  var SUN = new THREE.Vector3(-86, 58, -190);
+  var sunDir = SUN.clone().normalize();
+
+  scene.add(new THREE.HemisphereLight(0xffd9a0, 0x4a3318, 0.72));
+
+  var key = new THREE.DirectionalLight(0xffcf90, 1.28);
+  key.position.copy(SUN);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -62; key.shadow.camera.right = 62;
+  key.shadow.camera.top = 62;   key.shadow.camera.bottom = -62;
+  key.shadow.camera.near = 1;   key.shadow.camera.far = 520;
+  key.shadow.bias = -0.0008;
+  scene.add(key);
+
+  var rim = new THREE.DirectionalLight(0x9fc4ff, 0.22);
+  rim.position.set(60, 30, 120);
+  scene.add(rim);
+
+  var bounce = new THREE.PointLight(0xc98a44, 0.55, 150, 2);
+  bounce.position.set(6, 3, -18);
+  scene.add(bounce);
+
+  /* ---------------- 天空穹顶 + 日晕 ---------------- */
+  var sky = new THREE.Mesh(
+    new THREE.SphereGeometry(1200, 32, 18),
+    new THREE.MeshBasicMaterial({ map: skyTexture(), side: THREE.BackSide, fog: false })
+  );
+  scene.add(sky);
+
+  var halo = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: haloTexture(), blending: THREE.AdditiveBlending, transparent: true,
+    depthWrite: false, opacity: 0.92, fog: false
+  }));
+  halo.scale.set(430, 430, 1);
+  halo.position.copy(sunDir.clone().multiplyScalar(820));
+  scene.add(halo);
+
+  var sunDisc = new THREE.Mesh(
+    new THREE.CircleGeometry(26, 40),
+    new THREE.MeshBasicMaterial({ color: 0xffeec4, transparent: true, opacity: 0.75, fog: false, blending: THREE.AdditiveBlending, depthWrite: false })
+  );
+  sunDisc.position.copy(sunDir.clone().multiplyScalar(795));
+  sunDisc.lookAt(0,0,0);
+  scene.add(sunDisc);
+
+  /* ---------------- 地面 ---------------- */
+  var groundMat = new THREE.MeshPhongMaterial({
+    map: groundTexture(), color: 0xffffff, shininess: 3, specular: 0x2a2014
+  });
+  var groundGeo = new THREE.PlaneGeometry(900, 900, 72, 72);
+  var gpos = groundGeo.attributes.position;
+  for(var gi=0; gi<gpos.count; gi++){
+    var gx = gpos.getX(gi), gy = gpos.getY(gi);
+    var d = Math.sqrt(gx*gx + gy*gy);
+    var fall = clamp((d - 46) / 120, 0, 1);
+    var hgt = (Math.sin(gx*0.035)*Math.cos(gy*0.028)*3.2 + Math.sin(gx*0.11+gy*0.07)*1.1) * fall;
+    gpos.setZ(gi, hgt);
+  }
+  groundGeo.computeVertexNormals();
+  var ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI/2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  /* 御道 */
+  var road = new THREE.Mesh(
+    new THREE.PlaneGeometry(30, 170, 1, 1),
+    new THREE.MeshPhongMaterial({ map: roadTexture(), color: 0xffffff, shininess: 6, specular: 0x3a2c18 })
+  );
+  road.rotation.x = -Math.PI/2;
+  road.position.set(0, 0.03, -14);
+  road.receiveShadow = true;
+  scene.add(road);
+
+  /* 御道两侧陪道（稍窄、色调更暗） */
+  [-21, 21].forEach(function(x){
+    var s = new THREE.Mesh(
+      new THREE.PlaneGeometry(7, 150),
+      new THREE.MeshPhongMaterial({ map: roadTexture(), color: 0x9c8560, shininess: 4 })
+    );
+    s.rotation.x = -Math.PI/2;
+    s.position.set(x, 0.02, -10);
+    s.receiveShadow = true;
+    scene.add(s);
+  });
+
+  /* ---------------- 远山 ---------------- */
+  (function buildRidge(){
+    var W = 900, D = 30, H = 130, seg = 110;
+    var geo = new THREE.PlaneGeometry(W, H, seg, 6);
+    var pos = geo.attributes.position;
+    for(var i=0;i<pos.count;i++){
+      var x = pos.getX(i), y = pos.getY(i);
+      var t = (y + H/2) / H;
+      var peak = Math.sin(x*0.012)*11 + Math.sin(x*0.031+1.3)*6.5 + Math.sin(x*0.071+2.7)*3.2 + Math.sin(x*0.153)*1.4;
+      pos.setZ(i, peak * (1 - t*0.72));
+    }
+    geo.computeVertexNormals();
+    var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: PAL.ridge, transparent: true, opacity: 0.94, fog: true }));
+    m.position.set(0, H/2 + 4, -300);
+    m.rotation.y = 0;
+    scene.add(m);
+
+    var m2 = new THREE.Mesh(geo.clone(), new THREE.MeshBasicMaterial({ color: 0x2f2416, transparent: true, opacity: 0.9 }));
+    m2.position.set(-40, H/2 + 1, -240); m2.scale.set(1.25, 0.62, 1);
+    scene.add(m2);
+  })();
+
+  /* ---------------- 尘土粒子 ---------------- */
+  var dustUniforms = { time: { value: 0 } };
+  (function buildDust(){
+    var N = 1700;
+    var geo = new THREE.BufferGeometry();
+    var p = new Float32Array(N*3), sz = new Float32Array(N), ph = new Float32Array(N);
+    for(var i=0;i<N;i++){
+      p[i*3]   = rnd(-52, 52);
+      p[i*3+1] = rnd(0.2, 13);
+      p[i*3+2] = rnd(-160, 44);
+      sz[i] = rnd(2.0, 8.5);
+      ph[i] = rr()*PI2;
+    }
+    geo.setAttribute("position", new THREE.BufferAttribute(p,3));
+    geo.setAttribute("sz", new THREE.BufferAttribute(sz,1));
+    geo.setAttribute("ph", new THREE.BufferAttribute(ph,1));
+    var mat = new THREE.ShaderMaterial({
+      uniforms: dustUniforms,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: [
+        "attribute float sz; attribute float ph; uniform float time; varying float vA;",
+        "void main(){",
+        "  vec3 q = position;",
+        "  q.x += sin(time*0.32 + ph)*1.9;",
+        "  q.y += cos(time*0.24 + ph*1.37)*0.62;",
+        "  q.z += sin(time*0.19 + ph*0.71)*1.1;",
+        "  vec4 mv = modelViewMatrix * vec4(q,1.0);",
+        "  gl_PointSize = sz * (300.0 / max(1.0,-mv.z));",
+        "  gl_Position = projectionMatrix * mv;",
+        "  vA = smoothstep(190.0, 16.0, -mv.z) * smoothstep(0.0, 6.0, q.y);",
+        "}"
+      ].join("\n"),
+      fragmentShader: [
+        "varying float vA;",
+        "void main(){",
+        "  float d = length(gl_PointCoord - vec2(0.5));",
+        "  float a = smoothstep(0.5, 0.04, d);",
+        "  gl_FragColor = vec4(0.93, 0.80, 0.57, a * vA * 0.5);",
+        "}"
+      ].join("\n")
+    });
+    var pts = new THREE.Points(geo, mat);
+    pts.frustumCulled = false;
+    scene.add(pts);
+  })();
+
+  /* ---------------- 兵马俑：单几何 + InstancedMesh ---------------- */
+  var potteryTex = potteryTexture();
+  var M = {
+    armor:  new THREE.MeshPhongMaterial({ color: PAL.armor,     map: potteryTex, shininess: 8,  specular: 0x2b2419 }),
+    armorDk:new THREE.MeshPhongMaterial({ color: PAL.armorDark, map: potteryTex, shininess: 8,  specular: 0x2b2419 }),
+    robe:   new THREE.MeshPhongMaterial({ color: PAL.robe,      map: potteryTex, shininess: 6,  specular: 0x241f16 }),
+    skin:   new THREE.MeshPhongMaterial({ color: PAL.skin,      shininess: 12, specular: 0x3a3226 }),
+    hair:   new THREE.MeshPhongMaterial({ color: PAL.hair,      shininess: 26, specular: 0x2a2622 }),
+    wood:   new THREE.MeshPhongMaterial({ color: PAL.wood,      shininess: 22, specular: 0x4a3418 }),
+    woodDk: new THREE.MeshPhongMaterial({ color: PAL.woodDark,  shininess: 16, specular: 0x3a2510 }),
+    lacquer:new THREE.MeshPhongMaterial({ color: PAL.lacquer,   shininess: 42, specular: 0x77301c }),
+    bronze: new THREE.MeshPhongMaterial({ color: PAL.bronze,    shininess: 78, specular: 0xd8c48f }),
+    bronzeHi:new THREE.MeshPhongMaterial({ color: PAL.bronzeHi, shininess: 88, specular: 0xf0e0b0 }),
+    cloth:  new THREE.MeshPhongMaterial({ color: PAL.cloth,     shininess: 4,  specular: 0x2a2214 }),
+    clay:   new THREE.MeshPhongMaterial({ color: PAL.terracottaDk, map: potteryTex, shininess: 6 })
+  };
+
+  function buildSoldierGeo(){
+    var parts = [];
+    function push(g, mat){ parts.push({ g: g, m: mat }); }
+    var skirt = new THREE.CylinderGeometry(0.21, 0.32, 0.64, 6);
+    skirt.translate(0, 0.32, 0); push(skirt, 2);
+    var torso = new THREE.BoxGeometry(0.46, 0.42, 0.31);
+    torso.translate(0, 0.84, 0); push(torso, 0);
+    var shoulder = new THREE.BoxGeometry(0.58, 0.11, 0.36);
+    shoulder.translate(0, 1.01, 0); push(shoulder, 1);
+    var neck = new THREE.CylinderGeometry(0.07,0.075,0.09,5);
+    neck.translate(0, 1.08, 0); push(neck, 3);
+    var head = new THREE.SphereGeometry(0.118, 8, 6);
+    head.scale(1, 1.12, 1); head.translate(0, 1.20, 0); push(head, 3);
+    var bun = new THREE.SphereGeometry(0.062, 6, 5);
+    bun.translate(0, 1.32, 0.035); push(bun, 4);
+    var armL = new THREE.BoxGeometry(0.115, 0.36, 0.14);
+    armL.rotateZ(0.24); armL.translate(-0.30, 0.86, 0); push(armL, 0);
+    var armR = new THREE.BoxGeometry(0.115, 0.36, 0.14);
+    armR.rotateZ(-0.10); armR.translate(0.31, 0.86, -0.02); push(armR, 0);
+    var spear = new THREE.CylinderGeometry(0.023, 0.023, 1.62, 4);
+    spear.translate(0.35, 0.81, -0.10); push(spear, 6);
+    var tip = new THREE.CylinderGeometry(0.0, 0.052, 0.22, 4);
+    tip.translate(0.35, 1.73, -0.10); push(tip, 8);
+
+    var byMat = [[],[],[]];
+    for(var i=0;i<parts.length;i++){
+      var bucket = byMat[parts[i].m];
+      bucket.push(parts[i].g);
+    }
+    return byMat.map(function(arr){
+      return THREE.BufferGeometryUtils.mergeBufferGeometries(arr, false);
+    });
+  }
+
+  var soldierGeos = buildSoldierGeo();
+  var soldierMats = [M.armor, M.armorDk, M.robe];
+
+  var SOLDIER_ROWS = 12, PER_SIDE = 8;
+  var soldierCount = SOLDIER_ROWS * PER_SIDE * 2;
+  var soldierMeshes = [];
+  var soldierData = [];
+
+  (function placeArmy(){
+    for(var mIdx = 0; mIdx < soldierGeos.length; mIdx++){
+      var im = new THREE.InstancedMesh(soldierGeos[mIdx], soldierMats[mIdx], soldierCount);
+      im.castShadow = true; im.receiveShadow = true;
+      im.userData.section = "exp";
+      im.userData.label = "兵马俑阵列";
+      im.frustumCulled = false;
+      scene.add(im);
+      soldierMeshes.push(im);
+    }
+    var idx = 0;
+    for(var r=0; r<SOLDIER_ROWS; r++){
+      for(var side=-1; side<=1; side+=2){
+        for(var k=0; k<PER_SIDE; k++){
+          var rowZ = 34 - r*6.0 + rnd(-0.55, 0.55);
+          var lane = 9.6 + (k%2 === 0 ? -0.55 : 0.55) + rnd(-0.22, 0.22);
+          var depth = -k*1.95 + rnd(-0.3, 0.3);
+          soldierData.push({
+            x: side * lane,
+            y: 0,
+            z: rowZ + depth,
+            rot: side * 0.10 + rnd(-0.05, 0.05),
+            ph: rr()*PI2,
+            sc: rnd(0.94, 1.06)
+          });
+          idx++;
+        }
+      }
+    }
+  })();
+
+  var dummy = new THREE.Object3D();
+  function updateArmy(t){
+    for(var i=0;i<soldierData.length;i++){
+      var s = soldierData[i];
+      var bob = Math.sin(t*1.7 + s.ph) * 0.045;
+      dummy.position.set(s.x, s.y + bob, s.z);
+      dummy.rotation.set(0, s.rot + Math.sin(t*0.9 + s.ph)*0.03, Math.sin(t*1.5 + s.ph*0.7)*0.022);
+      dummy.scale.setScalar(s.sc);
+      dummy.updateMatrix();
+      for(var m=0;m<soldierMeshes.length;m++){
+        soldierMeshes[m].setMatrixAt(i, dummy.matrix);
+      }
+    }
+    for(var m2=0;m2<soldierMeshes.length;m2++){
+      soldierMeshes[m2].instanceMatrix.needsUpdate = true;
+    }
+  }
+  updateArmy(0);
+
+  /* ---------------- 车马构造 ---------------- */
+  function makeWheel(radius){
+    var g = new THREE.Group();
+    var rimT = new THREE.TorusGeometry(radius, 0.085, 8, 30);
+    var rim = new THREE.Mesh(rimT, M.wood); rim.rotation.y = Math.PI/2; rim.castShadow = true;
+    g.add(rim);
+    for(var i=0;i<16;i++){
+      var spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.038,0.038, radius*1.94, 4), M.woodDk);
+      spoke.rotation.z = (i/16)*PI2;
+      spoke.rotation.x = Math.PI/2;
+      spoke.castShadow = true;
+      g.add(spoke);
+    }
+    var hub = new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.34,10), M.bronze);
+    hub.rotation.z = Math.PI/2; hub.castShadow = true;
+    g.add(hub);
+    return g;
+  }
+
+  function makeHorse(){
+    var g = new THREE.Group();
+    var body = new THREE.Mesh(new THREE.CylinderGeometry(0.30,0.34,1.06,8), M.cloth);
+    body.rotation.z = Math.PI/2; body.position.y = 1.06; body.castShadow = true; g.add(body);
+    var chest = new THREE.Mesh(new THREE.SphereGeometry(0.33, 8, 6), M.cloth);
+    chest.position.set(-0.52, 1.06, 0); chest.castShadow = true; g.add(chest);
+    var neck = new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.25,0.62,7), M.cloth);
+    neck.position.set(-0.74, 1.44, 0); neck.rotation.z = 0.72; neck.castShadow = true; g.add(neck);
+    var head = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.26, 0.42), M.cloth);
+    head.position.set(-1.00, 1.72, 0); head.rotation.z = 0.36; head.castShadow = true; g.add(head);
+    var mane = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.30, 0.16), M.woodDk);
+    mane.position.set(-0.76, 1.62, 0); mane.rotation.z = 0.5; g.add(mane);
+
+    var legs = [[-0.40,0.16],[-0.40,-0.16],[0.42,0.16],[0.42,-0.16]];
+    for(var i=0;i<legs.length;i++){
+      var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.058,0.92,5), M.cloth);
+      leg.position.set(legs[i][0], 0.48, legs[i][1]);
+      leg.castShadow = true; g.add(leg);
+      var hoof = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.085,0.09,6), M.woodDk);
+      hoof.position.set(legs[i][0], 0.045, legs[i][1]); g.add(hoof);
+    }
+    var tail = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.62, 6), M.hair);
+    tail.position.set(0.76, 1.24, 0); tail.rotation.z = -1.0; g.add(tail);
+
+    var strap = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.05, 6, 14), M.bronzeHi);
+    strap.position.set(-0.60, 1.34, 0); strap.rotation.y = Math.PI/2; strap.rotation.z = 0.5;
+    g.add(strap);
+    var bell = new THREE.Mesh(new THREE.SphereGeometry(0.075, 7, 6), M.bronzeHi);
+    bell.position.set(-0.62, 1.16, 0.20); g.add(bell);
+    return g;
+  }
+
+  function makeChariot(opt){
+    opt = opt || {};
+    var g = new THREE.Group();
+    var L = 2.1, W = 1.5;
+
+    /* 车箱 */
+    var boxBase = new THREE.Mesh(new THREE.BoxGeometry(L, 0.16, W), M.woodDk);
+    boxBase.position.y = 1.02; boxBase.castShadow = true; g.add(boxBase);
+    var wallF = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.52, W), M.lacquer);
+    wallF.position.set(-L/2 + 0.05, 1.32, 0); wallF.castShadow = true; g.add(wallF);
+    var wallB = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.46, W), M.lacquer);
+    wallB.position.set(L/2 - 0.05, 1.29, 0); wallB.castShadow = true; g.add(wallB);
+    [-1,1].forEach(function(s){
+      var side = new THREE.Mesh(new THREE.BoxGeometry(L, 0.30, 0.08), M.lacquer);
+      side.position.set(0, 1.21, s*(W/2));
+      side.castShadow = true; g.add(side);
+    });
+
+    /* 华盖伞 */
+    if(opt.canopy){
+      var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.065,1.55,7), M.wood);
+      pole.position.set(0.12, 2.15, 0); pole.castShadow = true; g.add(pole);
+      var canopy = new THREE.Mesh(new THREE.ConeGeometry(1.28, 0.42, 26, 1, true), M.lacquer);
+      canopy.position.set(0.12, 2.92, 0); canopy.material.side = THREE.DoubleSide;
+      canopy.castShadow = true; g.add(canopy);
+      var trim = new THREE.Mesh(new THREE.TorusGeometry(1.28, 0.05, 6, 26), M.bronzeHi);
+      trim.position.set(0.12, 2.74, 0); trim.rotation.x = Math.PI/2; g.add(trim);
+      var knob = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), M.bronzeHi);
+      knob.position.set(0.12, 3.16, 0); g.add(knob);
+    }
+
+    /* 辕 */
+    var shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.095, 2.9, 7), M.wood);
+    shaft.rotation.z = Math.PI/2; shaft.position.set(-2.1, 0.92, 0);
+    shaft.castShadow = true; g.add(shaft);
+    [-1,1].forEach(function(s){
+      var yoke = new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,1.75,6), M.woodDk);
+      yoke.rotation.x = Math.PI/2;
+      yoke.position.set(-3.1, 0.98, s*0.62); yoke.castShadow = true; g.add(yoke);
+    });
+    /* 衡上的铜铃 */
+    [-1,1].forEach(function(s){
+      var bell = new THREE.Mesh(new THREE.SphereGeometry(0.085, 7, 6), M.bronzeHi);
+      bell.position.set(-3.1, 0.76, s*0.96); g.add(bell);
+    });
+
+    /* 轮 */
+    var wheelY = 0.66;
+    [-1,1].forEach(function(s){
+      var w = makeWheel(0.66);
+      w.position.set(0.18, wheelY, s*(W/2 + 0.22));
+      w.userData.spin = true;
+      g.add(w);
+      var axle = new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.065, W + 0.62, 6), M.woodDk);
+      axle.rotation.x = Math.PI/2; axle.position.set(0.18, wheelY, 0); g.add(axle);
+    });
+
+    /* 御者 + 乘者 */
+    if(opt.crew !== false){
+      var driver = makeFigure({ robe: M.cloth, hat: true });
+      driver.position.set(0.62, 1.10, 0); g.add(driver);
+      var rider = makeFigure({ robe: opt.riderMat || M.lacquer, hat: true, halo: !!opt.canopy });
+      rider.position.set(-0.42, 1.10, opt.riderZ || 0); g.add(rider);
+    }
+
+    /* 马匹（双马） */
+    var horses = [];
+    [-1,1].forEach(function(s){
+      var h = makeHorse();
+      h.position.set(-4.35, 0, s*0.78);
+      h.rotation.y = 0;
+      h.userData.ph = rr()*PI2;
+      g.add(h);
+      horses.push(h);
+      var rein = new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,2.4,4), M.hair);
+      rein.rotation.z = 0.22; rein.position.set(-3.4, 1.32, s*0.42); g.add(rein);
+    });
+
+    /* 车尾旌旗 */
+    if(opt.flag){
+      var fp = new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.05,3.2,6), M.wood);
+      fp.position.set(1.35, 2.0, W/2 - 0.2); fp.castShadow = true; g.add(fp);
+      var fm = new THREE.MeshBasicMaterial({ map: flagTexture(opt.flag, "#f0d79a"), side: THREE.DoubleSide, transparent: true });
+      var fg = new THREE.PlaneGeometry(2.5, 1.72, 20, 6);
+      var flag = new THREE.Mesh(fg, fm);
+      flag.position.set(2.62, 3.02, W/2 - 0.2);
+      flag.userData.flag = true;
+      g.add(flag);
+    }
+
+    /* 车身铭牌（内嵌文字） */
+    if(opt.plate){
+      var pt = opt.plate;
+      var pm = new THREE.MeshBasicMaterial({ map: textTexture({
+        width: 1024, height: 512,
+        kicker: pt.kicker, title: pt.title, subtitle: pt.subtitle, body: pt.body,
+        titleSize: pt.titleSize || 82, bodySize: 34, subSize: 38,
+        stamp: pt.stamp, padTop: 92
+      }), side: THREE.DoubleSide, transparent: true });
+      var pg = new THREE.PlaneGeometry(5.9, 2.95);
+      var plate = new THREE.Mesh(pg, pm);
+      plate.position.set(0, 3.5, 0.02);
+      plate.userData.billboard = true;
+      g.add(plate);
+      g.userData.plate = plate;
+    }
+    g.userData.horses = horses;
+    return g;
+  }
+
+  /* 乘员（车上的立姿人） */
+  function makeFigure(o){
+    o = o || {};
+    var g = new THREE.Group();
+    var robe = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.30, 0.86, 7), o.robe || M.cloth);
+    robe.position.y = 0.43; robe.castShadow = true; g.add(robe);
+    var torso = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.46, 0.30), M.armor);
+    torso.position.y = 1.06; torso.castShadow = true; g.add(torso);
+    [-1,1].forEach(function(s){
+      var arm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.40, 0.14), M.armorDk);
+      arm.position.set(s*0.28, 1.02, -0.02); g.add(arm);
+    });
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 9, 7), M.skin);
+    head.position.y = 1.42; head.castShadow = true; g.add(head);
+    if(o.hat){
+      var hat = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.155, 0.24, 8), M.hair);
+      hat.position.y = 1.60; g.add(hat);
+      var brim = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.035, 12), M.hair);
+      brim.position.y = 1.49; g.add(brim);
+    }
+    if(o.halo){
+      var ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.026, 6, 24), M.bronzeHi);
+      ring.position.set(0, 1.98, -0.14); ring.rotation.x = 0.25; g.add(ring);
+    }
+    return g;
+  }
+
+  /* ---------------- 九驾车马阵列 ---------------- */
+  var CHARIOT_INFO = [
+    { kicker:"CHAPTER 01 · 首页", title:"御道", subtitle:"周天子九驾 · 头车马",
+      body:"辚辚车声自远而来。此处为整条御道的起点，九驾车马依次列阵，旌旗猎猎，尘土漫过两千年的黄昏。",
+      plateKey:"home", canopy:true, riderMat:M.lacquer, flag:"林", stamp:"林澈" },
+    { kicker:"CHAPTER 02 · 关于", title:"关于", subtitle:"创意技术工程师",
+      body:"林澈 CHE LIN，创意技术工程师。用代码把想象落成可被触摸的场景：粒子、光照、几何与时间。",
+      plateKey:"about", flag:"澈", stamp:"关于" },
+    { kicker:"CHAPTER 03 · 技能", title:"技能", subtitle:"场景 · 交互 · 性能",
+      body:"Three.js / WebGL 实时渲染、程序化建模与材质、GPU 粒子与实例化、交互设计与着色器调优。",
+      plateKey:"skills", flag:"技", stamp:"技能" },
+    { kicker:"CHAPTER 04 · 作品", title:"作品", subtitle:"实时场景集",
+      body:"火山熔岩、黑洞吸积盘、深海鲸群、像素乐高屋、九驾头车马——同一套技术底座，五种世界。",
+      plateKey:"works", flag:"作", stamp:"作品" },
+    { kicker:"CHAPTER 05 · 经历", title:"经历", subtitle:"与兵马俑同行",
+      body:"从静态页面到实时三维，从单张图到完整世界。像陶俑一样，一件一件站成阵列。",
+      plateKey:"exp", flag:"历", stamp:"经历" },
+    { kicker:"CHAPTER 06 · 联系", title:"联系", subtitle:"御道尽头",
+      body:"邮箱 che.lin@example.com　·　主页 marvis.dev　·　合作、交流或只是聊聊渲染，都欢迎。",
+      plateKey:"contact", flag:"联", stamp:"联系" },
+    { kicker:"", title:"九驾", subtitle:"副车 · 随行", body:"", plateKey:"about", flag:"驾" },
+    { kicker:"", title:"九驾", subtitle:"副车 · 殿后", body:"", plateKey:"skills", flag:"马" },
+    { kicker:"", title:"九驾", subtitle:"副车 · 压阵", body:"", plateKey:"works", flag:"车" }
+  ];
+
+  var chariots = [];
+  var XOFF = [-2.4, 2.4, -1.6, 1.6, -0.8, 0.8, -2.0, 2.0, 0];
+  CHARIOT_INFO.forEach(function(info, i){
+    var z = -3 - i*11.6;
+    var ch = makeChariot({
+      canopy: !!info.canopy,
+      plate: { kicker: info.kicker, title: info.title, subtitle: info.subtitle, body: info.body, stamp: info.stamp },
+      flag: info.flag,
+      riderMat: info.riderMat,
+      riderZ: i % 2 === 0 ? 0.34 : -0.34
+    });
+    ch.position.set(XOFF[i], 0, z);
+    ch.rotation.y = (i % 2 === 0 ? 1 : -1) * 0.02;
+    ch.userData.section = info.plateKey;
+    ch.userData.label = info.title;
+    ch.userData.kicker = info.kicker;
+    ch.userData.index = i;
+    ch.traverse(function(o){ o.castShadow = true; });
+    scene.add(ch);
+    chariots.push(ch);
+  });
+
+  /* ---------------- 九驾高台 ---------------- */
+  function makeTerrace(w, h, d, x, z, label, sub, section){
+    var g = new THREE.Group();
+    var base = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), M.clay);
+    base.position.y = h/2; base.castShadow = true; base.receiveShadow = true;
+    base.userData.section = section;
+    g.add(base);
+    var top = new THREE.Mesh(new THREE.BoxGeometry(w*1.06, 0.22, d*1.06), M.clay);
+    top.position.y = h + 0.1; top.castShadow = true;
+    g.add(top);
+    var t = textTexture({
+      width: 1024, height: 512, kicker:"CHAPTER 06 · 联系",
+      title: label, subtitle: sub,
+      body:"九驾列阵于此。欢迎抵达御道尽头，与我取得联系。",
+      titleSize: 88, stamp: "高台", padTop: 96
+    });
+    var panel = new THREE.Mesh(
+      new THREE.PlaneGeometry(9.2, 4.6),
+      new THREE.MeshBasicMaterial({ map: t, transparent: true })
+    );
+    panel.position.set(0, h + 3.2, 0);
+    panel.userData.billboard = true;
+    g.add(panel);
+    var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.09, h + 1.2, 6), M.wood);
+    pole.position.set(0, (h+1.2)/2, -0.4); g.add(pole);
+    g.position.set(x, 0, z);
+    g.userData.section = section;
+    g.userData.label = label;
+    scene.add(g);
+    return g;
+  }
+
+  var terrace = makeTerrace(11, 3.2, 7, 0, -112, "联系", "踏上高台", "contact");
+
+  /* 高台前的低台阵（增强纵深层次） */
+  (function ridges(){
+    for(var i=0;i<5;i++){
+      var w = 26 + i*7;
+      var st = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.8 + i*0.35, 6),
+        new THREE.MeshPhongMaterial({ color: 0x6f5734, shininess: 4 })
+      );
+      st.position.set(rnd(-8,8), (0.8 + i*0.35)/2, -126 - i*7);
+      st.receiveShadow = true;
+      scene.add(st);
+    }
+  })();
+
+  /* ---------------- 都将 / 军吏（近景人物锚点） ---------------- */
+  function makeOfficer(x, z, ry, section, label, kicker, robeMat, scale){
+    var g = new THREE.Group();
+    var f = makeFigure({ robe: robeMat, hat: true });
+    f.scale.setScalar(scale || 1.35);
+    g.add(f);
+    var cape = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.0, 0.12), M.lacquer);
+    cape.position.set(0, 1.52, 0.26); cape.rotation.x = 0.08; cape.castShadow = true;
+    g.add(cape);
+    var pt = textTexture({ width: 1024, height: 512, kicker: kicker, title: label, body: "",
+                           titleSize: 96, stamp: "", padTop: 150 });
+    var panel = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.1),
+      new THREE.MeshBasicMaterial({ map: pt, transparent: true }));
+    panel.position.set(0, 3.5, 0);
+    panel.userData.billboard = true;
+    g.add(panel);
+    g.position.set(x, 0, z);
+    g.rotation.y = ry;
+    g.userData.section = section;
+    g.userData.label = label;
+    scene.add(g);
+    return g;
+  }
+
+  var officers = [
+    makeOfficer(-15.5, -6, 0.5, "works", "作品", "CHAPTER 04", M.lacquer, 1.42),
+    makeOfficer( 16.2, -34, -0.5, "exp", "经历", "CHAPTER 05", M.armor, 1.48),
+    makeOfficer(-14.0, -66, 0.4, "skills", "技能", "CHAPTER 03", M.cloth, 1.36)
+  ];
+
+  /* ---------------- 悬浮微尘中的空间锚点标记 ---------------- */
+  var markers = [];
+  function makeMarker(x, y, z, key, label, kicker){
+    var g = new THREE.Group();
+    var core = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8),
+      new THREE.MeshBasicMaterial({ color: 0xf0d79a, transparent: true, opacity: 0.95 }));
+    g.add(core);
+    var ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.018, 6, 30),
+      new THREE.MeshBasicMaterial({ color: 0xd9a441, transparent: true, opacity: 0.75 }));
+    ring.rotation.x = Math.PI/2;
+    ring.userData.spin = true;
+    g.add(ring);
+    var ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.82, 0.012, 6, 30),
+      new THREE.MeshBasicMaterial({ color: 0xf0d79a, transparent: true, opacity: 0.42 }));
+    ring2.rotation.x = Math.PI/2; ring2.rotation.y = 0.4;
+    ring2.userData.spin2 = true;
+    g.add(ring2);
+    var beam = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.14, 2.6, 8, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0xd9a441, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }));
+    beam.position.y = -1.3;
+    g.add(beam);
+    g.position.set(x, y, z);
+    g.userData.section = key;
+    g.userData.label = label;
+    g.userData.kicker = kicker;
+    g.userData.marker = true;
+    scene.add(g);
+    markers.push(g);
+    return g;
+  }
+
+  makeMarker(-8.0, 4.4, 26, "home", "首页 · 御道", "CHAPTER 01");
+  makeMarker( 9.0, 4.6, 2,  "about", "关于 · 头车", "CHAPTER 02");
+  makeMarker(-11.0,4.4, -22,"skills","技能 · 九驾", "CHAPTER 03");
+
+  /* ---------------- 章节 / 相机锚点 ---------------- */
+  var SECTIONS = [
+    { key:"home",    label:"首页 · 御道",      name:"壹",
+      pos:new THREE.Vector3(-8.0, 4.4, 26) },
+    { key:"about",   label:"关于 · 天子头车",  name:"贰",
+      pos:new THREE.Vector3(0, 3.6, -3) },
+    { key:"skills",  label:"技能 · 九驾序列",  name:"叁",
+      pos:new THREE.Vector3(0, 3.6, -49.5) },
+    { key:"works",   label:"作品 · 御道旌旗",  name:"肆",
+      pos:new THREE.Vector3(-15.5, 3.2, -6) },
+    { key:"exp",     label:"经历 · 兵马俑阵列",name:"伍",
+      pos:new THREE.Vector3(16.2, 3.2, -34) },
+    { key:"contact", label:"联系 · 九驾高台",  name:"陆",
+      pos:new THREE.Vector3(0, 5.2, -112) }
+  ];
+  var VIEW = {
+    home:    { dist: 34, off: new THREE.Vector3(8, 6.5, 26), look: new THREE.Vector3(0, 4, -6) },
+    about:   { dist: 20, off: new THREE.Vector3(7, 4.6, 17), look: new THREE.Vector3(-1.6, 2.2, -9) },
+    skills:  { dist: 22, off: new THREE.Vector3(7.5, 5, 18), look: new THREE.Vector3(0, 2.6, -56) },
+    works:   { dist: 15, off: new THREE.Vector3(6, 3.2, 13), look: new THREE.Vector3(-13, 2.4, -8) },
+    exp:     { dist: 17, off: new THREE.Vector3(6.5, 3.4, 14), look: new THREE.Vector3(12, 2.4, -36) },
+    contact: { dist: 26, off: new THREE.Vector3(9, 7, 22), look: new THREE.Vector3(0, 3.6, -110) }
+  };
+
+  var current = 0;
+  var camLerp = 0, camFromPos = new THREE.Vector3(), camToPos = new THREE.Vector3();
+  var tgtLerp = 0, tgtFrom = new THREE.Vector3(), tgtTo = new THREE.Vector3();
+
+  function setSection(i, instant){
+    i = ((i % SECTIONS.length) + SECTIONS.length) % SECTIONS.length;
+    current = i;
+    var s = SECTIONS[i], v = VIEW[s.key];
+    var dir = new THREE.Vector3().subVectors(v.off, v.look).normalize();
+    var dest = v.look.clone().add(dir.multiplyScalar(v.dist));
+
+    camFromPos.copy(camera.position); camToPos.copy(dest); camLerp = 0;
+    var tgt = chariots[Math.min(chariots.length-1, i < 6 ? (i===0?0:(i===1?0:(i===2?4:(i===3?0:(i===4?8:0))))) : 0)];
+    tgtFrom.copy(controls.target);
+    tgtTo.copy(v.look);
+    tgtLerp = 0;
+
+    document.querySelectorAll("#nav a, #a11y a").forEach(function(a){
+      a.classList.toggle("on", a.getAttribute("data-key") === s.key);
+    });
+    document.getElementById("pageno").querySelector("b").textContent = s.name;
+    document.getElementById("pnlabel").textContent = s.label;
+
+    var desc = document.getElementById("huddesc");
+    if(i === 0){
+      desc.textContent = "以九驾头车马为序，列阵而行。辚辚车声、猎猎旌旗与两千年前军阵，全部由浏览器实时渲染 —— 文案与导航已刻入器物，请转动视角自行发现。";
+    } else if(i === 3){
+      desc.textContent = "御道两侧的旌旗与都尉手持本章铭牌。点击旗帜或人物，可抵达对应章节。";
+    } else if(i === 4){
+      desc.textContent = "两侧十二排陶俑向远方延伸，是「经历」的实体化：一件一件，站成阵列。";
+    } else if(i === 5){
+      desc.textContent = "御道尽头的九驾高台，是本页的落点。滚轮向前，穿过尘土抵达。";
+    } else {
+      desc.textContent = "滚轮沿御道推进，拖拽环视，点击任意器物切换章节。当前：" + s.label + "。";
+    }
+    if(instant){
+      camera.position.copy(dest);
+      controls.target.copy(v.look);
+      camLerp = 1; tgtLerp = 1;
+    }
+  }
+
+  /* ---------------- 交互：滚轮推进 ---------------- */
+  var wheelAcc = 0, wheelLock = 0;
+  window.addEventListener("wheel", function(e){
+    if(wheelLock > 0) return;
+    wheelAcc += Math.abs(e.deltaY);
+    if(wheelAcc > 130){
+      wheelAcc = 0; wheelLock = 0.28;
+      setSection(current + (e.deltaY > 0 ? 1 : -1));
+    }
+  }, { passive: true });
+
+  /* ---------------- 交互：拖拽 / 点击 ---------------- */
+  var down = null, moved = 0;
+  var raycaster = new THREE.Raycaster();
+  var ndc = new THREE.Vector2();
+
+  canvas.addEventListener("pointerdown", function(e){
+    down = { x: e.clientX, y: e.clientY, t: performance.now() };
+    moved = 0;
+    canvas.classList.add("grabbing");
+  });
+  window.addEventListener("pointermove", function(e){
+    if(down) moved = Math.max(moved, Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y));
+  });
+  window.addEventListener("pointerup", function(e){
+    canvas.classList.remove("grabbing");
+    if(!down) return;
+    var quick = (performance.now() - down.t) < 420 && moved < 6;
+    down = null;
+    if(!quick) return;
+    ndc.x = (e.clientX / window.innerWidth) * 2 - 1;
+    ndc.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    var hits = raycaster.intersectObjects(clickTargets(), true);
+    for(var i=0;i<hits.length;i++){
+      var sec = findSection(hits[i].object);
+      if(sec){ focusKey(sec); return; }
+    }
+  });
+
+  function clickTargets(){
+    return chariots.concat(officers, markers, [terrace], soldierMeshes, [road]);
+  }
+  function findSection(o){
+    while(o){
+      if(o.userData && o.userData.section) return o.userData.section;
+      o = o.parent;
+    }
+    return null;
+  }
+  function focusKey(k){
+    for(var i=0;i<SECTIONS.length;i++){
+      if(SECTIONS[i].key === k){ setSection(i); return; }
+    }
+  }
+
+  /* ---------------- 交互：键盘 ---------------- */
+  window.addEventListener("keydown", function(e){
+    if(e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "PageDown"){ setSection(current+1); e.preventDefault(); }
+    else if(e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "PageUp"){ setSection(current-1); e.preventDefault(); }
+    else if(e.key >= "1" && e.key <= "6"){ setSection(parseInt(e.key,10) - 1); }
+  });
+
+  document.querySelectorAll("#nav a").forEach(function(a){
+    a.addEventListener("click", function(){
+      a.classList.add("p3d");
+      setTimeout(function(){ a.classList.remove("p3d"); }, 900);
+      focusKey(a.getAttribute("data-key"));
+    });
+  });
+  document.querySelectorAll("#a11y a").forEach(function(a){
+    a.addEventListener("click", function(e){
+      e.preventDefault(); focusKey(a.getAttribute("data-key"));
+    });
+  });
+
+  /* ---------------- 悬停 3D 提示 ---------------- */
+  var mouse = { x: -9999, y: -9999, px: -9999, py: -9999, moved: false };
+  window.addEventListener("pointermove", function(e){
+    mouse.x = e.clientX; mouse.y = e.clientY;
+    if(Math.abs(mouse.x - mouse.px) > 2 || Math.abs(mouse.y - mouse.py) > 2){ mouse.moved = true; }
+    mouse.px = mouse.x; mouse.py = mouse.y;
+  });
+
+  var hintEl = document.getElementById("hint3d");
+  var proj = new THREE.Vector3();
+  var hoverTmp = 0;
+  function screenOf(v3){
+    proj.copy(v3).project(camera);
+    return {
+      x: (proj.x * 0.5 + 0.5) * window.innerWidth,
+      y: (-proj.y * 0.5 + 0.5) * window.innerHeight,
+      z: proj.z
+    };
+  }
+  function updateHover(){
+    hoverTmp = (hoverTmp + 1) % 4;
+    if(hoverTmp !== 0) return;
+    if(!mouse.moved){ return; }
+    var best = null, bestD = 46;
+    var list = chariots.concat(officers, markers, [terrace]);
+    for(var i=0;i<list.length;i++){
+      var o = list[i];
+      var wp = o.getWorldPosition(new THREE.Vector3());
+      wp.y += (o.userData.marker ? 0.9 : 3.1);
+      var s = screenOf(wp);
+      if(s.z > 1) continue;
+      var d = Math.abs(s.x - mouse.x) + Math.abs(s.y - mouse.y);
+      if(d < bestD){ bestD = d; best = { x: s.x, y: s.y, t: o.userData.label }; }
+    }
+    /* 兵马俑实例悬停 */
+    if(!best){
+      ndc.x = (mouse.x / window.innerWidth) * 2 - 1;
+      ndc.y = -(mouse.y / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(ndc, camera);
+      var hits = raycaster.intersectObjects(soldierMeshes, false);
+      if(hits.length && hits[0].instanceId !== undefined){
+        var im = hits[0].object;
+        var mat = new THREE.Matrix4();
+        im.getMatrixAt(hits[0].instanceId, mat);
+        var p = new THREE.Vector3().setFromMatrixPosition(mat);
+        var sp = screenOf(p); sp.y -= 34;
+        best = { x: sp.x, y: sp.y, t: "兵马俑阵列 · 点击查看经历" };
+      }
+    }
+    if(best){
+      hintEl.style.opacity = "1";
+      hintEl.style.transform = "translate(" + best.x + "px," + best.y + "px) translate(-50%,-100%)";
+      hintEl.textContent = best.t;
+      canvas.style.cursor = "pointer";
+    } else {
+      hintEl.style.opacity = "0";
+      canvas.style.cursor = down ? "grabbing" : "grab";
+    }
+  }
+
+  /* ---------------- 章节牌 & 立牌的常驻角标（3D 锚定） ---------------- */
+  var sectagEl = document.getElementById("sectag");
+  function updateSectag(){
+    var ch = chariots[Math.min(current, chariots.length-1)];
+    var wp = ch.getWorldPosition(new THREE.Vector3());
+    wp.y += 5.6;
+    var s = screenOf(wp);
+    if(s.z > 1){ sectagEl.style.opacity = "0"; return; }
+    sectagEl.style.transform = "translate(" + s.x + "px," + s.y + "px) translate(-50%,-100%)";
+    sectagEl.querySelector("b").textContent = chassisTitle(current);
+    sectagEl.querySelector("span").textContent = SECTIONS[current].label;
+    sectagEl.style.opacity = "0.96";
+  }
+  function chassisTitle(i){
+    var t = ["头车 · 御道", "关于 · 头车马", "技能 · 九驾序列", "作品 · 旌旗", "经历 · 陶俑阵列", "联系 · 九驾高台"];
+    return t[i] || "九驾";
+  }
+
+  /* ---------------- 动画循环 ---------------- */
+  var clock = new THREE.Clock();
+  var camOffset = new THREE.Vector3();
+
+  function animate(){
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    var t = clock.elapsedTime;
+
+    if(hasCtrl){ controls.update(); }
+    if(wheelLock > 0) wheelLock -= dt;
+    if(camLerp < 1){
+      camLerp = Math.min(1, camLerp + dt * 0.85);
+      camera.position.lerpVectors(camFromPos, camToPos, easeIO(camLerp));
+    }
+    if(tgtLerp < 1){
+      tgtLerp = Math.min(1, tgtLerp + dt * 0.85);
+      controls.target.lerpVectors(tgtFrom, tgtTo, easeIO(tgtLerp));
+    }
+
+    /* 人物行走微动 / 车轮滚动 / 旌旗摆动 */
+    updateArmy(t);
+    for(var i=0;i<chariots.length;i++){
+      var ch = chariots[i];
+      var horses = ch.userData.horses || [];
+      for(var h=0;h<horses.length;h++){
+        horses[h].rotation.z = Math.sin(t*1.35 + horses[h].userData.ph)*0.026;
+        horses[h].position.y = Math.abs(Math.sin(t*1.35 + horses[h].userData.ph))*0.045;
+      }
+      ch.traverse(function(o){
+        if(o.userData && o.userData.spin){ o.rotation.x = -t * 0.62; }
+        if(o.userData && o.userData.flag){
+          var g = o.geometry.attributes.position;
+          for(var v=0; v<g.count; v++){
+            var ux = (g.getX(v) + 1.25) / 2.5;
+            g.setZ(v, Math.sin(t*2.4 + ux*4.6 + i)*0.16*(ux*ux));
+          }
+          g.needsUpdate = true;
+        }
+      });
+      if(ch.userData.plate){
+        ch.userData.plate.lookAt(camera.position.x, ch.userData.plate.getWorldPosition(new THREE.Vector3()).y, camera.position.z);
+      }
+    }
+
+    /* 标记环旋转 + 呼吸 */
+    for(var m=0;m<markers.length;m++){
+      markers[m].children.forEach(function(c){
+        if(c.userData.spin)  c.rotation.z = t * 0.7;
+        if(c.userData.spin2) c.rotation.z = -t * 0.45;
+      });
+      var sc = 1 + Math.sin(t*1.9 + m)*0.06;
+      markers[m].scale.setScalar(sc);
+      markers[m].position.y = markers[m].userData.baseY !== undefined
+        ? markers[m].userData.baseY + Math.sin(t*1.2 + m)*0.22
+        : (markers[m].userData.baseY = markers[m].position.y) + Math.sin(t*1.2 + m)*0.22;
+    }
+
+    /* 立牌朝向相机 */
+    officers.forEach(function(o){
+      o.children.forEach(function(c){
+        if(c.userData && c.userData.billboard){
+          var wp = c.getWorldPosition(new THREE.Vector3());
+          c.lookAt(camera.position.x, wp.y, camera.position.z);
+        }
+      });
+    });
+    terrace.children.forEach(function(c){
+      if(c.userData && c.userData.billboard){
+        var wp = c.getWorldPosition(new THREE.Vector3());
+        c.lookAt(camera.position.x, wp.y, camera.position.z);
+      }
+    });
+
+    /* 尘土 */
+    dustUniforms.time.value = t;
+    /* 日晕随相机（保持无限远） */
+    halo.position.copy(sunDir.clone().multiplyScalar(820)).add(camera.position.clone().multiplyScalar(0.0));
+    sunDisc.position.copy(sunDir.clone().multiplyScalar(795));
+    sky.position.copy(camera.position);
+
+    updateHover();
+    updateSectag();
+
+    /* HUD 呼吸 */
+    renderer.render(scene, camera);
+  }
+
+  /* ---------------- 自适应 ---------------- */
+  window.addEventListener("resize", function(){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  });
+
+  /* ---------------- 启动 ---------------- */
+  if(hasCtrl){
+    controls = new THREE.OrbitControls(camera, canvas);
+    controls.target.set(0, 4, -6);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.rotateSpeed = 0.42;
+    controls.zoomSpeed = 0.7;
+    controls.panSpeed = 0.5;
+    controls.enablePan = false;
+    controls.minDistance = 8;
+    controls.maxDistance = 78;
+    controls.minPolarAngle = 12 * rad;
+    controls.maxPolarAngle = 82 * rad;
+    controls.autoRotate = false;
+    controls.update();
+  } else {
+    document.getElementById("hint").textContent = "滚轮 · 推进　|　点击器物 · 切换章节　|　1-6 · 直达";
+  }
+
+  setSection(0, true);
+  animate();
+
+  setTimeout(function(){
+    var ld = document.getElementById("loader");
+    ld.style.opacity = "0";
+    setTimeout(function(){ ld.style.display = "none"; }, 950);
+  }, 1100);
+
+})();
+</script>
+</body>
+</html>

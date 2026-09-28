@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>林澈 · 创意技术工程师 | 无味斋手记</title>
+<style>
+:root{
+  --paper:#f4ecda; --ink:#3a342c; --ink2:rgba(58,52,44,.55);
+  --blue:#4a7c82; --ochre:#a05a32; --lotus:#e8b8b0; --seal:#b03a2e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--paper);color:var(--ink);overflow:hidden;
+  font-family:"STKaiti","KaiTi","Songti SC","Noto Serif SC",serif;
+  -webkit-font-smoothing:antialiased;user-select:none;
+}
+canvas#bg{position:fixed;inset:0;display:block;z-index:0}
+
+#book-wrap{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+  perspective:2200px;pointer-events:none}
+#book{position:relative;width:min(72vw,880px);height:min(82vh,600px);
+  transform-style:preserve-3d;pointer-events:auto}
+.page{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.55,.06,.28,.99);
+  backface-visibility:hidden;background:var(--paper);
+  border-radius:4px 14px 14px 4px;
+  box-shadow:0 18px 44px rgba(60,45,20,.28),0 2px 6px rgba(60,45,20,.12);
+  overflow:hidden;cursor:pointer}
+.page::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(120% 90% at 8% 8%,rgba(255,255,255,.55),rgba(255,255,255,0) 40%),
+    repeating-linear-gradient(0deg,rgba(120,90,50,.018) 0 2px,transparent 2px 4px)}
+.page .back{position:absolute;inset:0;transform:rotateY(180deg);backface-visibility:hidden;
+  background:#e6dcbe;border-radius:4px 14px 14px 4px}
+.page.turned{transform:rotateY(-180deg)}
+
+.pg{padding:44px 46px;height:100%;display:flex;flex-direction:column}
+.pg .tagnum{font-size:13px;letter-spacing:.2em;color:var(--ink2)}
+.pg h2{font-size:40px;font-weight:400;letter-spacing:.12em;margin:8px 0 6px}
+.pg .rule{width:64px;height:2px;background:var(--ink2);margin:6px 0 22px}
+.pg p{font-size:17px;line-height:2.05;color:rgba(58,52,44,.86);margin-bottom:12px}
+.pg p b{font-weight:700;color:var(--ink)}
+.pg .colophon{position:absolute;bottom:26px;right:34px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.pg .seal{width:34px;height:34px;background:var(--seal);color:#f6ecd8;display:flex;align-items:center;justify-content:center;
+  font-size:14px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.pg .seal span{writing-mode:vertical-rl;letter-spacing:.1em;font-size:12px}
+.ill{position:absolute;right:34px;top:40px;opacity:.9;pointer-events:none}
+.skill{margin:4px 0 14px}
+.skill .nm{font-size:15px;display:flex;justify-content:space-between;letter-spacing:.08em}
+.skill .nm em{font-style:normal;color:var(--ink2);font-size:13px}
+.skill .dots{display:flex;gap:6px;margin-top:5px}
+.skill .dots i{width:12px;height:12px;border-radius:50%;background:rgba(58,52,44,.14)}
+.skill .dots i.on{background:var(--ochre);box-shadow:0 0 0 1px rgba(160,90,50,.2)}
+.work{margin:0 0 16px;padding-left:14px;border-left:2px solid var(--blue)}
+.work h4{font-size:17px;font-weight:600;margin-bottom:3px;letter-spacing:.06em}
+.work p{font-size:14px;margin:0;line-height:1.8}
+.tl{list-style:none;margin-top:4px}
+.tl li{position:relative;padding:0 0 16px 20px;border-left:1px solid rgba(58,52,44,.25)}
+.tl li::before{content:"";position:absolute;left:-4px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--seal)}
+.tl time{font-size:12px;color:var(--ochre);letter-spacing:.1em}
+.tl h5{font-size:16px;font-weight:600;margin:2px 0 3px}
+.tl p{font-size:13.5px;margin:0;line-height:1.75}
+.contact a{display:inline-block;margin:6px 10px 0 0;padding:7px 16px;border:1px solid rgba(58,52,44,.35);
+  border-radius:2px;font-size:14px;color:var(--ink);text-decoration:none;letter-spacing:.05em;transition:.2s}
+.contact a:hover{background:var(--ochre);color:#f6ecd8;border-color:var(--ochre)}
+
+#p-cover{background:linear-gradient(160deg,#efe4cc,#e3d4b0)}
+#p-cover .cv{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+#p-cover .bookname{font-size:56px;letter-spacing:.28em;text-indent:.28em}
+#p-cover .sub{font-size:15px;color:var(--ink2);letter-spacing:.4em;text-indent:.4em}
+#p-cover .kite-ill{margin:20px 0 8px;opacity:.85}
+
+#nav-arrows{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:30;display:flex;gap:26px;align-items:center}
+#nav-arrows button{width:46px;height:46px;border-radius:50%;border:1px solid rgba(58,52,44,.4);
+  background:rgba(244,236,218,.6);color:var(--ink);font-size:20px;cursor:pointer;
+  transition:.2s;backdrop-filter:blur(2px)}
+#nav-arrows button:hover{background:var(--ink);color:var(--paper)}
+#nav-arrows button:disabled{opacity:.3;cursor:default}
+#dots{display:flex;gap:8px}
+#dots i{width:7px;height:7px;border-radius:50%;background:rgba(58,52,44,.25);transition:.25s}
+#dots i.on{background:var(--seal);transform:scale(1.3)}
+
+#hud{position:fixed;left:0;right:0;top:0;z-index:30;display:flex;justify-content:space-between;align-items:center;
+  padding:16px 28px;pointer-events:none}
+#hud .title{font-size:16px;letter-spacing:.34em;color:var(--ink)}
+#hud .tip{font-size:12px;color:var(--ink2);letter-spacing:.12em}
+#loader{position:fixed;inset:0;z-index:60;background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:20px;letter-spacing:.3em;color:var(--ink2);transition:opacity .8s}
+#loader.gone{opacity:0;visibility:hidden}
+@media(max-width:720px){.pg{padding:30px 28px}.pg h2{font-size:30px}.ill{display:none}
+  #book{width:88vw;height:78vh}#p-cover .bookname{font-size:40px}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div id="hud">
+  <div class="title">无味斋手记</div>
+  <div class="tip">点击画册左/右半翻页 · 也可用 ← → 键</div>
+</div>
+
+<div id="book-wrap">
+  <div id="book">
+    <section class="page" id="p-cover">
+      <div class="back"></div>
+      <div class="cv">
+        <div class="bookname">无味斋手记</div>
+        <div class="sub">林澈 · 创意技术工程师</div>
+        <svg class="kite-ill" width="150" height="130" viewBox="0 0 150 130">
+          <g fill="none" stroke="#3a342c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M75 18 L95 60 L75 112 L55 60 Z" fill="#e8b8b0" opacity=".5"/>
+            <path d="M75 18 L75 112" opacity=".5"/>
+            <path d="M55 60 L95 60" opacity=".5"/>
+            <path d="M75 112 C78 122 84 126 90 128" opacity=".7"/>
+            <path d="M75 18 C70 8 62 4 54 6" opacity=".6"/>
+            <circle cx="30" cy="44" r="9" fill="#c0392b" opacity=".85"/>
+            <path d="M20 30 q4 -8 14 -10" opacity=".5"/>
+            <path d="M108 20 q10 2 16 -4" opacity=".5"/>
+            <path d="M118 50 q8 8 14 6" opacity=".5"/>
+          </g>
+        </svg>
+        <div style="margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="seal"><span>林澈之印</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page"><div class="back"></div>
+      <div class="pg">
+        <div class="tagnum">壹 · 自叙</div><h2>关于</h2><div class="rule"></div>
+        <p>我是<b>林澈</b>，一名创意技术工程师。做的事介于<b>工程</b>与<b>叙事</b>之间——把没人看得上的细节，做成值得被看见的东西。</p>
+        <p>过去几年，我在浏览器里造过火山、黑洞、鲸、车马，也画过一只在池塘里慢吞吞游水的甲鱼。说到底都一样：<b>让技术有个人味儿。</b></p>
+        <svg class="ill" width="120" height="90" viewBox="0 0 120 90">
+          <g stroke="#3a342c" stroke-width="2" fill="none" stroke-linecap="round">
+            <ellipse cx="58" cy="60" rx="34" ry="20" fill="#9c8a5c" stroke="#3a342c"/>
+            <path d="M40 60 Q30 50 26 42" stroke-width="3"/>
+            <circle cx="26" cy="40" r="4" fill="#3a342c"/>
+            <path d="M34 76 q6 8 0 12 M60 80 q6 8 0 12 M84 76 q4 8 -2 12" opacity=".8"/>
+            <path d="M92 60 q6 -2 10 -8" stroke-width="2.5"/>
+            <path d="M18 30 q12 -6 24 0" opacity=".5"/>
+            <path d="M20 46 q14 -4 28 0" opacity=".5"/>
+          </g>
+        </svg>
+        <div class="colophon"><div class="seal"><span>甲鱼闲游</span></div></div>
+      </div>
+    </section>
+
+    <section class="page"><div class="back"></div>
+      <div class="pg">
+        <div class="tagnum">贰 · 六艺</div><h2>技能</h2><div class="rule"></div>
+        <div class="skill"><div class="nm">WebGL / Three.js <em>95</em></div><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></div>
+        <div class="skill"><div class="nm">GLSL 着色器 <em>86</em></div><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></div>
+        <div class="skill"><div class="nm">TypeScript / Vite <em>90</em></div><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></div>
+        <div class="skill"><div class="nm">程序化建模 <em>82</em></div><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></div>
+        <div class="skill"><div class="nm">动效与叙事 <em>85</em></div><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></div>
+        <svg class="ill" width="110" height="120" viewBox="0 0 110 120">
+          <g stroke="#4a7c82" stroke-width="2" fill="none" stroke-linecap="round">
+            <circle cx="55" cy="58" r="26" fill="#5a8a70" opacity=".5"/>
+            <path d="M30 42 Q20 32 24 20" stroke="#3a342c"/>
+            <path d="M44 26 Q54 16 64 22" stroke="#3a342c"/>
+            <path d="M64 34 Q74 24 82 30" stroke="#3a342c"/>
+            <path d="M55 96 Q50 108 42 112" stroke="#3a342c"/>
+            <path d="M28 78 q-8 4 -14 0" opacity=".6"/>
+            <path d="M24 96 q-6 8 -16 8" opacity=".6"/>
+          </g>
+        </svg>
+        <div class="colophon"><div class="seal"><span>六艺</span></div></div>
+      </div>
+    </section>
+
+    <section class="page"><div class="back"></div>
+      <div class="pg">
+        <div class="tagnum">叁 · 拾遗</div><h2>作品</h2><div class="rule"></div>
+        <div class="work"><h4>《长明火》实时火山模拟</h4><p>GPU 粒子热对流近似，四十万颗粒子稳定 60fps。</p></div>
+        <div class="work"><h4>《视界之外》引力透镜可视化</h4><p>raymarching 求解光线偏折，把黑洞做成可行走的场景。</p></div>
+        <div class="work"><h4>《九驾》西周车马复原</h4><p>按考古报告重建车马器比例，知识做进交互里。</p></div>
+        <svg class="ill" width="110" height="110" viewBox="0 0 110 110">
+          <g stroke="#3a342c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M30 88 C20 60 30 34 54 22 C78 34 88 60 78 88" fill="#e8b8b0" opacity=".45"/>
+            <path d="M54 22 L54 30" />
+            <circle cx="54" cy="22" r="4" fill="#c0392b"/>
+            <path d="M54 30 C40 34 34 44 32 52" opacity=".6"/>
+            <path d="M54 30 C68 34 74 44 76 52" opacity=".6"/>
+            <path d="M20 70 q20 -6 30 0 M60 70 q20 -6 28 0" opacity=".5"/>
+          </g>
+        </svg>
+        <div class="colophon"><div class="seal"><span>拾遗</span></div></div>
+      </div>
+    </section>
+
+    <section class="page"><div class="back"></div>
+      <div class="pg">
+        <div class="tagnum">肆 · 年谱</div><h2>履历</h2><div class="rule"></div>
+        <ul class="tl">
+          <li><time>2023 — 至今</time><h5>独立创意技术</h5><p>为品牌与美术馆做实时图形装置。</p></li>
+          <li><time>2020 — 2023</time><h5>互娱科技 · 高级前端</h5><p>渲染管线、性能与动效体系。</p></li>
+          <li><time>2018 — 2020</time><h5>数字工作室 · 交互开发</h5><p>线下装置与机构控制。</p></li>
+        </ul>
+        <div class="colophon"><div class="seal"><span>年谱</span></div></div>
+      </div>
+    </section>
+
+    <section class="page"><div class="back"></div>
+      <div class="pg contact">
+        <div class="tagnum">伍 · 通问</div><h2>联系</h2><div class="rule"></div>
+        <p>若有闲事，或想共画一池荷、共放一只鸢，请通问于下。</p>
+        <a href="mailto:hello@linche.studio">✉ hello@linche.studio</a>
+        <a>GitHub / linche</a>
+        <a>微信 / linche_dev</a>
+        <div class="colophon"><div class="seal"><span>通问</span></div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="nav-arrows">
+  <button id="prev">‹</button>
+  <div id="dots"></div>
+  <button id="next">›</button>
+</div>
+
+<div id="loader">无味斋手记</div>
+
+<script>
+/* ============================================================
+   水墨背景（柳叶 / 荷花 / 甲鱼 / 池塘 / 远山 / 月）
+   ============================================================ */
+(function(){
+  var cv = document.getElementById('bg'), ctx = cv.getContext('2d');
+  var W, H;
+  function resize(){ W = cv.width = innerWidth*devicePixelRatio; H = cv.height = innerHeight*devicePixelRatio; }
+  resize(); addEventListener('resize', resize);
+
+  function ink(a){ return 'rgba(58,52,44,'+a+')'; }
+  function blue(a){ return 'rgba(74,124,130,'+a+')'; }
+
+  var turtle = {x:0.62, y:0.72, dir:1, ph:0, head:0};
+  var leaves = [];
+  for(var i=0;i<8;i++) leaves.push({x:Math.random(), y:Math.random(), sp:0.0006+Math.random()*0.001, s:6+Math.random()*8, rot:Math.random()*6.28, ph:Math.random()*6.28});
+  var ripples = [];
+  for(i=0;i<5;i++) ripples.push({x:Math.random(), y:0.62+Math.random()*0.32, w:60+Math.random()*120, sp:0.0002+Math.random()*0.0004, ph:Math.random()*6.28});
+
+  function leaf(ctx, x, y, len, ang, a){
+    ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+    ctx.strokeStyle = ink(a); ctx.lineWidth = 1.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,-len/2); ctx.quadraticCurveTo(len*0.35,0,0,len/2);
+    ctx.quadraticCurveTo(-len*0.35,0,0,-len/2); ctx.stroke();
+    ctx.restore();
+  }
+  function willowBranch(ctx, x, y, len, bend, t){
+    ctx.strokeStyle = ink(.75); ctx.lineWidth=2; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(x,y);
+    var cx=x+bend*len*0.4, cy=y+len*0.45;
+    var ex=x+bend*len + Math.sin(t+len*0.5)*8, ey=y+len;
+    ctx.quadraticCurveTo(cx,cy,ex,ey); ctx.stroke();
+    for(var k=0;k<8;k++){
+      var tt=k/8;
+      var bx = x + (ex-x)*tt + Math.sin(t*1.4+tt*5)*6;
+      var by = y + (ey-y)*tt;
+      var s = 14 - tt*6;
+      leaf(ctx, bx, by, s, 0.7+Math.sin(t*1.2+tt*4)*0.3, .55);
+    }
+  }
+  function lotus(ctx, x, y, s, t){
+    ctx.save(); ctx.translate(x,y);
+    ctx.strokeStyle = ink(.6); ctx.lineWidth=1.6; ctx.lineCap='round';
+    ctx.fillStyle = blue(.16);
+    ctx.beginPath();
+    ctx.arc(0,0,s,0.35,6.0); ctx.lineTo(s*0.7, s*0.3); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = ink(.3); ctx.lineWidth=1;
+    for(var k=0;k<6;k++){ var a=-0.6+k*0.4; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*s*0.9, Math.sin(a)*s*0.9); ctx.stroke(); }
+    if(s>14){
+      var wob = Math.sin(t*0.9+x)*0.05;
+      ctx.strokeStyle = '#c76b5a'; ctx.lineWidth=1.6; ctx.fillStyle='rgba(232,184,176,.5)';
+      for(var p=0;p<6;p++){
+        var pa = -1.2 + p*0.42 + wob;
+        ctx.beginPath();
+        ctx.ellipse(Math.cos(pa)*s*0.34, -s*0.62 + Math.sin(pa)*s*0.1, s*0.30, s*0.12, pa, 0, 6.2832);
+        ctx.fill(); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(200,140,60,.6)';
+      ctx.beginPath(); ctx.arc(0,-s*0.66, s*0.16, 0, 6.2832); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function turtleDraw(ctx, x, y, s, dir, t){
+    ctx.save(); ctx.translate(x,y); ctx.scale(dir,1);
+    ctx.lineCap='round';
+    ctx.strokeStyle = ink(.5); ctx.lineWidth=2;
+    for(var k=0;k<4;k++){
+      var lx = k<2 ? -s*0.5 : s*0.5;
+      var ly = k%2===0 ? -s*0.28 : s*0.28;
+      var swing = Math.sin(t*2 + k)*s*0.12;
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + (k<2?-s*0.32:s*0.32), ly + swing); ctx.stroke();
+    }
+    ctx.fillStyle='rgba(156,138,92,.85)'; ctx.strokeStyle=ink(.8); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(0,0,s*0.62,s*0.42,0,0,6.2832); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle=ink(.3); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(0,0,s*0.42,s*0.24,0,0,6.2832); ctx.stroke();
+    var hn = Math.sin(t*0.7)*s*0.14;
+    ctx.strokeStyle=ink(.7); ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(s*0.5,0); ctx.lineTo(s*0.82, hn*0.4); ctx.stroke();
+    ctx.fillStyle=ink(.9); ctx.beginPath(); ctx.arc(s*0.86, hn*0.4, s*0.09, 0, 6.2832); ctx.fill();
+    ctx.strokeStyle=ink(.5); ctx.beginPath(); ctx.moveTo(-s*0.6,0); ctx.lineTo(-s*0.78, s*0.08); ctx.stroke();
+    ctx.restore();
+  }
+  function farMountain(ctx, x, y, w, h, a){
+    ctx.fillStyle = ink(a);
+    ctx.beginPath(); ctx.moveTo(x-w/2, y);
+    ctx.quadraticCurveTo(x-w*0.25, y-h, x, y-h*0.55);
+    ctx.quadraticCurveTo(x+w*0.3, y-h*0.9, x+w/2, y);
+    ctx.closePath(); ctx.fill();
+  }
+
+  var start = performance.now();
+  function draw(){
+    var t = (performance.now()-start)/1000;
+    ctx.clearRect(0,0,W,H);
+    var u = Math.min(W,H);
+    ctx.fillStyle='#f4ecda'; ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha=.05;
+    for(var fi=0;fi<140;fi++){
+      ctx.fillStyle='rgba(120,90,50,.5)';
+      ctx.fillRect(fi*97.3%W, fi*61.7%H, 2, 1);
+    }
+    ctx.globalAlpha=1;
+
+    ctx.fillStyle='rgba(200,120,80,.22)';
+    ctx.beginPath(); ctx.arc(W*0.14, H*0.16, u*0.05, 0, 6.2832); ctx.fill();
+    ctx.fillStyle='rgba(240,236,218,.9)';
+    ctx.beginPath(); ctx.arc(W*0.14+H*0.004, H*0.16-H*0.004, u*0.042, 0, 6.2832); ctx.fill();
+
+    farMountain(ctx, W*0.30, H*0.42, W*0.42, H*0.16, .12);
+    farMountain(ctx, W*0.62, H*0.44, W*0.36, H*0.13, .16);
+
+    var grad = ctx.createLinearGradient(0, H*0.52, 0, H);
+    grad.addColorStop(0,'rgba(74,124,130,.14)');
+    grad.addColorStop(1,'rgba(74,124,130,.30)');
+    ctx.fillStyle=grad; ctx.fillRect(0, H*0.52, W, H*0.48);
+    ctx.fillStyle='rgba(160,90,50,.12)';
+    ctx.beginPath(); ctx.moveTo(0,H*0.54); ctx.quadraticCurveTo(W*0.4,H*0.50, W, H*0.56);
+    ctx.lineTo(W,H*0.60); ctx.quadraticCurveTo(W*0.4,H*0.56,0,H*0.60); ctx.closePath(); ctx.fill();
+
+    ctx.strokeStyle=ink(.22); ctx.lineWidth=1.4;
+    for(var r=0;r<ripples.length;r++){
+      var rp=ripples[r];
+      var wx = ((rp.x + t*rp.sp) % 1.1 - 0.05) * W;
+      var wy = rp.y*H + Math.sin(t+rp.ph)*3;
+      var wl = rp.w*u/1000;
+      ctx.beginPath(); ctx.moveTo(wx-wl, wy);
+      ctx.quadraticCurveTo(wx, wy+3, wx+wl, wy);
+      ctx.stroke();
+    }
+
+    lotus(ctx, W*0.20, H*0.74, u*0.035, t);
+    lotus(ctx, W*0.32, H*0.80, u*0.050, t+1.3);
+    lotus(ctx, W*0.78, H*0.72, u*0.040, t+2.1);
+    lotus(ctx, W*0.86, H*0.80, u*0.055, t+0.4);
+
+    turtle.x += 0.00012*turtle.dir;
+    if(turtle.x > 0.9 || turtle.x < 0.5){ turtle.dir *= -1; }
+    turtleDraw(ctx, turtle.x*W, turtle.y*H, u*0.045, turtle.dir, t);
+
+    var sx = W*0.90, sy = H*0.16;
+    ctx.strokeStyle=ink(.7); ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(sx, H*0.60); ctx.quadraticCurveTo(sx-6,H*0.40, sx, sy); ctx.stroke();
+    for(var b=0;b<7;b++){
+      willowBranch(ctx, sx, sy + b*H*0.06, (0.5+b*0.08)*u*0.16, -0.5, t + b*0.7);
+    }
+
+    for(var l=0;l<leaves.length;l++){
+      var L=leaves[l];
+      L.y += L.sp;
+      if(L.y>1.1){ L.y=-0.05; L.x=Math.random(); }
+      var lx = L.x*W + Math.sin(t*2+L.ph)*30;
+      var ly = L.y*H;
+      leaf(ctx, lx, ly, L.s*u/1000+6, L.rot + t, .45);
+    }
+
+    ctx.fillStyle=ink(.5); ctx.font='13px "STKaiti","KaiTi",serif';
+    ctx.fillText('无味斋 记于池畔', W*0.06, H*0.92);
+    ctx.fillStyle='#b03a2e'; ctx.fillRect(W*0.06+120, H*0.922-22, 18, 18);
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ============================================================
+   翻页逻辑（支持自由前后切换）
+   ============================================================ */
+(function(){
+  var pages = Array.prototype.slice.call(document.querySelectorAll('#book .page'));
+  var cur = 0, busy = false;
+  var prevBtn = document.getElementById('prev'), nextBtn = document.getElementById('next');
+  var dots = document.getElementById('dots');
+  for(var i=0;i<pages.length;i++){ var d=document.createElement('i'); dots.appendChild(d); }
+
+  function layout(){
+    pages.forEach(function(p,i){
+      p.classList.toggle('turned', i < cur);
+      p.style.zIndex = (i===cur) ? 10 : (i<cur ? 1 : 2);
+    });
+  }
+  function updateDots(){
+    var ds = dots.querySelectorAll('i');
+    for(var i=0;i<ds.length;i++) ds[i].classList.toggle('on', i===cur);
+    prevBtn.disabled = cur===0;
+    nextBtn.disabled = cur===pages.length-1;
+  }
+  function goto(n){
+    if(busy || n===cur || n<0 || n>=pages.length) return;
+    busy = true;
+    if(n > cur){
+      // 翻下一页：当前页向左翻过去
+      var page = pages[cur];
+      page.style.zIndex = 20;
+      void page.offsetWidth;       // 触发过渡
+      page.classList.add('turned');
+      cur = n;
+      setTimeout(function(){ layout(); updateDots(); busy=false; }, 880);
+    } else {
+      // 回翻上一页：目标页从背面翻回正面
+      var target = pages[n];
+      target.style.zIndex = 20;
+      void target.offsetWidth;
+      target.classList.remove('turned');
+      cur = n;
+      setTimeout(function(){ layout(); updateDots(); busy=false; }, 880);
+    }
+  }
+  function next(){ goto(cur+1); }
+  function prev(){ goto(cur-1); }
+  nextBtn.onclick = next; prevBtn.onclick = prev;
+  addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown') next();
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp') prev();
+  });
+  document.getElementById('book').addEventListener('click', function(e){
+    if(e.target.closest('a')) return;
+    var rect = this.getBoundingClientRect();
+    if(e.clientX - rect.left < rect.width/2) prev(); else next();
+  });
+  layout(); updateDots();
+  setTimeout(function(){ document.getElementById('loader').classList.add('gone'); }, 500);
+})();
+</script>
+</body>
+</html>

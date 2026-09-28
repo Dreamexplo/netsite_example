@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>林澈 · 创意技术工程师 | 竹简</title>
+<style>
+:root{
+  --acc:#b08a3e; --acc2:#e8d3a0; --bamboo:#c9a964; --bamboo2:#b8934a;
+  --txt:#ece2cc; --muted:#9c8d6e; --line:rgba(255,255,255,.10); --ink:#0a0703;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:#0a0703;color:var(--txt);overflow:hidden;
+  font-family:"STKaiti","KaiTi","Songti SC","Noto Serif SC",serif;
+  -webkit-font-smoothing:antialiased;user-select:none}
+canvas#bg{position:fixed;inset:0;display:block;z-index:0;background:#0a0703;cursor:grab;touch-action:none}
+canvas#bg.grabbing{cursor:grabbing}
+#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(118% 92% at 50% 46%,rgba(0,0,0,0) 36%,rgba(8,5,2,.5) 74%,rgba(4,2,1,.92) 100%)}
+#nav{position:fixed;top:0;left:0;right:0;z-index:22;display:flex;align-items:center;justify-content:space-between;
+  padding:13px 26px;background:linear-gradient(180deg,rgba(10,7,3,.88),rgba(10,7,3,0))}
+#logo{font-weight:800;letter-spacing:.16em;font-size:14px;display:flex;align-items:center;gap:10px}
+#logo i{width:9px;height:9px;border-radius:2px;background:var(--acc);display:inline-block;animation:pulse 2.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+#logo small{font-weight:400;letter-spacing:.06em;color:var(--muted);font-size:11px}
+#nav ul{display:flex;gap:20px;list-style:none}
+#nav a{color:var(--muted);text-decoration:none;font-size:12.5px;letter-spacing:.1em;cursor:pointer;transition:.25s;padding:5px 2px;border-bottom:1px solid transparent}
+#nav a:hover,#nav a.active{color:var(--acc2);border-bottom-color:var(--acc)}
+@media(max-width:820px){#nav ul{gap:12px}#nav a{font-size:11px}#logo small{display:none}}
+#overlay{position:fixed;inset:0;z-index:8;pointer-events:none}
+.pn{position:absolute;left:0;top:0;width:580px;transform-origin:50% 50%;opacity:0;will-change:transform,opacity;pointer-events:none}
+.pn-in{position:relative;width:580px;padding:24px 28px 26px;
+  background:linear-gradient(165deg,rgba(36,28,16,.95),rgba(18,13,6,.97));
+  border:1px solid rgba(176,138,62,.35);border-radius:2px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.6) inset,0 26px 60px rgba(0,0,0,.65),0 0 40px rgba(176,138,62,.08)}
+.pn-in::before{content:"";position:absolute;inset:6px;border:1px solid rgba(176,138,62,.15);pointer-events:none}
+.pn.on .pn-in{border-color:rgba(232,211,160,.55);box-shadow:0 0 0 1px rgba(0,0,0,.6) inset,0 26px 70px rgba(0,0,0,.7),0 0 56px rgba(176,138,62,.2)}
+.pn-hd{display:flex;align-items:baseline;gap:12px;margin-bottom:13px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.pn-nm{font-size:26px;color:var(--acc2);line-height:1}
+.pn-tt{font-size:12px;letter-spacing:.26em;color:var(--muted)}
+.pn-sub{font-size:14.5px;color:var(--txt);opacity:.93;line-height:1.9;margin-bottom:12px}
+.pn-sub b{color:var(--acc2);font-weight:600}
+.row{display:flex;gap:24px;flex-wrap:wrap}
+.col{flex:1;min-width:180px}
+.lbl{font-size:10.5px;letter-spacing:.2em;color:var(--muted);margin:8px 0 7px}
+.bar{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.bar span{width:84px;font-size:12px;color:var(--txt);opacity:.86}
+.bar i{flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;display:block}
+.bar i u{display:block;height:100%;background:linear-gradient(90deg,var(--bamboo),var(--acc2))}
+.bar em{width:30px;text-align:right;font-style:normal;font-size:11px;color:var(--muted)}
+.card{border:1px solid var(--line);border-left:2px solid var(--acc);padding:10px 14px;margin-bottom:9px;background:rgba(255,255,255,.03);cursor:pointer;transition:.22s}
+.card:hover{background:rgba(176,138,62,.10);transform:translateX(4px)}
+.card h4{font-size:14px;color:var(--acc2);margin-bottom:3px}
+.card p{font-size:11.5px;color:var(--muted);line-height:1.7}
+.tl{position:relative;padding-left:16px}
+.tl::before{content:"";position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,var(--acc),transparent)}
+.tl li{list-style:none;position:relative;margin-bottom:11px}
+.tl li::before{content:"";position:absolute;left:-16px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.tl h5{font-size:13px;color:var(--txt)}
+.tl time{font-size:10.5px;color:var(--acc);display:block;margin-bottom:2px}
+.tl p{font-size:11.5px;color:var(--muted);line-height:1.65}
+.contacts{display:flex;gap:9px;flex-wrap:wrap;margin-top:4px}
+.contacts a{font-size:11.5px;color:var(--txt);text-decoration:none;border:1px solid var(--line);padding:7px 13px;background:rgba(255,255,255,.03);transition:.22s;pointer-events:auto}
+.contacts a:hover{border-color:var(--acc);color:var(--acc2)}
+.hintline{font-size:10.5px;color:var(--muted);margin-top:11px;opacity:.8}
+#hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:16px 26px;pointer-events:none;background:linear-gradient(0deg,rgba(10,7,3,.85),rgba(10,7,3,0))}
+#hudL .k{font-size:9.5px;letter-spacing:.3em;color:var(--acc)}
+#hudL .v{font-size:22px;color:var(--acc2);letter-spacing:.06em}
+#hudL .d{font-size:11px;color:var(--muted);margin-top:2px}
+#prog{width:220px;height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:8px;overflow:hidden}
+#prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--bamboo),var(--acc2))}
+#hudR{text-align:right;font-size:10.5px;color:var(--muted);line-height:1.9}
+#hudR b{color:var(--acc2);font-weight:500}
+#dock{position:fixed;right:22px;top:78px;z-index:21;width:198px;padding:14px 15px 15px;
+  background:linear-gradient(160deg,rgba(36,28,16,.92),rgba(18,13,6,.95));
+  border:1px solid var(--line);border-radius:2px;box-shadow:0 18px 44px rgba(0,0,0,.55)}
+#dock h3{font-size:10px;letter-spacing:.24em;color:var(--acc);margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:8px;display:flex;justify-content:space-between}
+#dock h3 button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px}
+#dock.min #dockBody{display:none}
+.ctrl{margin-bottom:11px}
+.ctrl label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:5px}
+.ctrl label b{color:var(--acc2);font-weight:500}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:rgba(255,255,255,.14);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--acc);box-shadow:0 0 9px rgba(176,138,62,.5);cursor:pointer}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.btns button{flex:1;min-width:54px;font-size:10.5px;padding:6px 4px;cursor:pointer;background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);border-radius:2px;transition:.2s}
+.btns button:hover{color:var(--acc2);border-color:var(--acc)}
+.btns button.on{background:rgba(176,138,62,.16);color:var(--acc2);border-color:var(--acc)}
+#tip{position:fixed;z-index:24;pointer-events:none;padding:6px 10px;font-size:11px;
+  background:rgba(10,7,3,.92);border:1px solid rgba(176,138,62,.4);color:var(--acc2);
+  border-radius:2px;opacity:0;transform:translate(14px,14px);white-space:nowrap}
+#loader{position:fixed;inset:0;z-index:60;background:#0a0703;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .8s}
+#loader .t{font-size:24px;color:var(--acc2);letter-spacing:.34em}
+#loader .b{width:190px;height:2px;background:rgba(255,255,255,.12)}
+#loader .b i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+#loader.gone{opacity:0;visibility:hidden;pointer-events:none}
+@media(max-width:900px){#dock{display:none}#hudR{display:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="vignette"></div>
+<nav id="nav">
+  <div id="logo"><i></i>林澈 <small>CREATIVE TECHNOLOGIST</small></div>
+  <ul>
+    <li><a class="wp" data-wp="about">简首</a></li>
+    <li><a class="wp" data-wp="skills">技艺</a></li>
+    <li><a class="wp" data-wp="works">作品</a></li>
+    <li><a class="wp" data-wp="journey">年表</a></li>
+    <li><a class="wp" data-wp="contact">落款</a></li>
+  </ul>
+</nav>
+<div id="overlay">
+  <article class="pn" id="pn-about">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">简首</div><div><div class="pn-tt">ABOUT / 关于</div></div></div>
+      <p class="pn-sub">我是<b>林澈</b>，创意技术工程师。古人把话刻在竹简上，一卷一卷展开；我把想法写进渲染循环，一帧一帧运行。<b>都是慢功夫。</b></p>
+      <p class="pn-sub">竹简会朽，代码会重构，但认真做一件事的样子不会变。这里是我不长的一卷简历，<b>请展开来读。</b></p>
+      <div class="hintline">▸ 拖拽旋转 · 滚轮展开/卷起竹简 · 点击段落细读</div>
+    </div>
+  </article>
+  <article class="pn" id="pn-skills">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">技艺</div><div><div class="pn-tt">SKILLS / 六艺</div></div></div>
+      <div class="row">
+        <div class="col">
+          <div class="lbl">刻</div>
+          <div class="bar"><span>WebGL / Three</span><i><u style="width:95%"></u></i><em>95</em></div>
+          <div class="bar"><span>GLSL</span><i><u style="width:86%"></u></i><em>86</em></div>
+          <div class="bar"><span>TypeScript</span><i><u style="width:90%"></u></i><em>90</em></div>
+        </div>
+        <div class="col">
+          <div class="lbl">编</div>
+          <div class="bar"><span>程序化建模</span><i><u style="width:82%"></u></i><em>82</em></div>
+          <div class="bar"><span>动效叙事</span><i><u style="width:85%"></u></i><em>85</em></div>
+          <div class="bar"><span>装置联动</span><i><u style="width:73%"></u></i><em>73</em></div>
+        </div>
+      </div>
+    </div>
+  </article>
+  <article class="pn" id="pn-works">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">作品</div><div><div class="pn-tt">WORKS / 遗篇</div></div></div>
+      <div class="card"><h4>《长明火》实时火山模拟</h4><p>GPU 粒子热对流近似，四十万颗粒子稳定 60fps。</p></div>
+      <div class="card"><h4>《视界之外》引力透镜可视化</h4><p>raymarching 求解光线偏折，把黑洞做成可行走的场景。</p></div>
+      <div class="card"><h4>《九驾》西周车马复原</h4><p>按考古报告重建车马器比例，知识做进交互里。</p></div>
+    </div>
+  </article>
+  <article class="pn" id="pn-journey">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">年表</div><div><div class="pn-tt">JOURNEY / 履历</div></div></div>
+      <ul class="tl">
+        <li><time>2023 — 至今</time><h5>独立创意技术</h5><p>为品牌与美术馆做实时图形装置。</p></li>
+        <li><time>2020 — 2023</time><h5>互娱科技 · 高级前端</h5><p>渲染管线、性能与动效体系。</p></li>
+        <li><time>2018 — 2020</time><h5>数字工作室 · 交互开发</h5><p>线下装置与机构控制。</p></li>
+      </ul>
+    </div>
+  </article>
+  <article class="pn" id="pn-contact">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">落款</div><div><div class="pn-tt">CONTACT / 通问</div></div></div>
+      <p class="pn-sub">简已展毕。若有共鸣，落款处候复——</p>
+      <div class="contacts">
+        <a href="mailto:hello@linche.studio">✉ hello@linche.studio</a>
+        <a>GitHub / linche</a>
+        <a>微信 / linche_dev</a>
+      </div>
+      <div class="hintline">▸ 展开到 100% 时，全卷尽收眼底</div>
+    </div>
+  </article>
+</div>
+<aside id="dock">
+  <h3><span>展卷 / SCROLL</span><button id="dockTg">—</button></h3>
+  <div id="dockBody">
+    <div class="ctrl"><label>展开程度 <b id="vP">—</b></label><input id="sP" type="range" min="5" max="100" step="1" value="12"></div>
+    <div class="btns"><button id="bAll">全展</button><button id="bRoll">收卷</button></div>
+    <div class="btns"><button id="bTop">全景</button><button id="bTour">逐段细读</button></div>
+  </div>
+</aside>
+<div id="hud">
+  <div id="hudL"><div class="k">NOW UNROLLING</div><div class="v" id="hudT">竹简</div><div class="d" id="hudD">缓缓展开，一简一世界</div>
+    <div id="prog"><i id="progI"></i></div></div>
+  <div id="hudR">
+    <div><b>拖拽</b> 旋转 · <b>滚轮</b> 展开/收卷</div>
+    <div><b>点击竹简段落</b> 细读 · <b>ESC</b> 全景</div>
+  </div>
+</div>
+<div id="tip"></div>
+<div id="loader"><div class="t">竹 简</div><div class="b"><i id="ldbar"></i></div></div>
+<script src="lib/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+var V3 = THREE.Vector3;
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function rnd(a,b){ return a+Math.random()*(b-a); }
+var canvas = document.getElementById('bg');
+var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.8));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0703);
+scene.fog = new THREE.FogExp2(0x0a0703, 0.011);
+var camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 400);
+
+function mkCanvas(w,h){ var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+function woodTexture(){
+  var c=mkCanvas(512,512), x=c.getContext('2d');
+  x.fillStyle='#2a1d0e'; x.fillRect(0,0,512,512);
+  for(var i=0;i<80;i++){
+    x.strokeStyle='rgba('+(80+Math.random()*40|0)+','+(50+Math.random()*30|0)+','+(20+Math.random()*15|0)+','+(0.3+Math.random()*0.4)+')';
+    x.lineWidth=1+Math.random()*2;
+    var y=Math.random()*512; x.beginPath(); x.moveTo(0,y);
+    for(var k=0;k<8;k++) x.lineTo(Math.random()*512, y+rnd(-8,8));
+    x.stroke();
+  }
+  var t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(8,5);
+  return t;
+}
+function bambooTexture(){
+  var c=mkCanvas(2048,512), x=c.getContext('2d');
+  x.fillStyle='#c9a964'; x.fillRect(0,0,2048,512);
+  var COLS=40, cw=2048/COLS;
+  for(var i=0;i<COLS;i++){
+    var px=i*cw;
+    x.fillStyle='rgba(160,120,50,'+(Math.random()*0.14+0.05)+')';
+    x.fillRect(px,0,cw,512);
+    x.fillStyle='rgba(60,40,15,.5)'; x.fillRect(px-1,0,2,512);
+    x.fillStyle='rgba(90,60,25,.15)';
+    for(var s=0;s<5;s++) x.fillRect(px+Math.random()*cw,0,1,512);
+  }
+  x.fillStyle='rgba(90,60,25,.55)';
+  x.fillRect(0,60,2048,8); x.fillRect(0,444,2048,8);
+  x.fillStyle='rgba(70,45,18,.6)';
+  for(i=0;i<COLS;i++){ x.fillRect(i*cw+2,56,12,16); x.fillRect(i*cw+2,440,12,16); }
+  x.fillStyle='#2a1c08'; x.textAlign='center'; x.textBaseline='top';
+  x.font='700 34px "STKaiti","KaiTi","Songti SC",serif';
+  function vcol(colIdx, text){
+    var cx = 2048 - (colIdx+0.5)*cw;
+    var ty = 90;
+    for(var j=0;j<text.length;j++){ x.fillText(text[j], cx, ty); ty += 36; }
+  }
+  var cols = [
+    {t:'林澈自叙', len:5},{t:'吾者林澈', len:4},{t:'创意技术工程师', len:7},{t:'以代码为笔', len:5},{t:'以屏幕为纸', len:5},
+    {t:'造火山黑洞', len:5},{t:'雕鲸与车马', len:5},{t:'乐此不疲', len:4},{t:'技艺六则', len:4},{t:'实时图形', len:4},
+    {t:'着色器', len:3},{t:'程序化', len:3},{t:'动效', len:2},{t:'硬件装置', len:4},{t:'作品三篇', len:4},{t:'长明火山', len:4},
+    {t:'视界黑洞', len:4},{t:'九驾车马', len:4},{t:'年表如左', len:4},{t:'独立至今', len:4},{t:'互娱三年', len:4},
+    {t:'工作室始', len:4},{t:'落款', len:2},{t:'通问于简末', len:5},{t:'林澈顿首', len:4}
+  ];
+  var ci=0;
+  cols.forEach(function(o){ for(var j=0;j<o.len;j++){ if(ci>=COLS) break; vcol(ci, o.t); ci++; } });
+  var t=new THREE.CanvasTexture(c); t.wrapS=THREE.ClampToEdgeWrapping; t.anisotropy=8; return t;
+}
+function radialSprite(inner, outer){
+  var c=mkCanvas(128,128), x=c.getContext('2d');
+  var g=x.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,inner); g.addColorStop(1,outer);
+  x.fillStyle=g; x.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+}
+
+scene.add(new THREE.HemisphereLight(0xffe8c0, 0x20140a, 0.7));
+var key = new THREE.DirectionalLight(0xffe4b8, 1.1);
+key.position.set(8, 20, 12);
+key.castShadow = true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.near=1; key.shadow.camera.far=70;
+key.shadow.camera.left=-30; key.shadow.camera.right=30;
+key.shadow.camera.top=30; key.shadow.camera.bottom=-30;
+key.shadow.bias=-0.0007;
+scene.add(key);
+var warm = new THREE.PointLight(0xffb060, 0.5, 40, 2); warm.position.set(-6,4,6); scene.add(warm);
+
+(function(){
+  var desk = new THREE.Mesh(new THREE.PlaneGeometry(200,120), new THREE.MeshPhongMaterial({map:woodTexture(), shininess:6}));
+  desk.rotation.x = -Math.PI/2; desk.position.y = -1.2;
+  desk.receiveShadow = true; scene.add(desk);
+})();
+
+/* ---------- 竹简几何（斜放成平行四边形） ---------- */
+var SLIP_L = 46;      // 全长
+var SLIP_W = 9;       // 宽
+var SEGS = 240;       // 长度分段
+var R0 = 1.15;        // 卷芯半径
+var SCROLL_ANGLE = -0.52;   // 斜放角度（绕 Y），让铺开部分呈透视平行四边形
+
+var scrollGroup = new THREE.Group();
+scrollGroup.rotation.y = SCROLL_ANGLE;
+scene.add(scrollGroup);
+
+var geo = new THREE.PlaneGeometry(SLIP_L, SLIP_W, SEGS, 1);
+geo.rotateX(-Math.PI/2);
+var slip = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+  map:bambooTexture(), shininess:14, specular:0x2a2010, side:THREE.DoubleSide}));
+slip.castShadow = true; slip.receiveShadow = true;
+scrollGroup.add(slip);
+
+var back = new THREE.Mesh(new THREE.PlaneGeometry(SLIP_L, SLIP_W, SEGS, 1),
+  new THREE.MeshPhongMaterial({color:0x8a6a34, shininess:6}));
+back.rotation.x = -Math.PI/2; back.position.y = -0.04;
+scrollGroup.add(back);
+
+var scrollPos = 0.12;
+var scrollTarget = 1.0;
+var intro = true, introT = 0;
+
+function updateScroll(){
+  var p = scrollPos;
+  var pos = geo.attributes.position;
+  var bpos = back.geometry.attributes.position;
+  var cx = -SLIP_L/2 + p*SLIP_L;
+  var thick = 0.035;
+  for(var i=0;i<=SEGS;i++){
+    var u = i/SEGS;
+    var x0, y0;
+    if(u <= p){
+      x0 = -SLIP_L/2 + u*SLIP_L;
+      y0 = 0;
+    } else {
+      var s = (u-p)*SLIP_L;
+      var a = s/R0;
+      var r = R0 + thick*a;
+      x0 = cx + r*Math.sin(a);
+      y0 = R0 - r*Math.cos(a);
+    }
+    pos.setY(i*2, y0);
+    pos.setY(i*2+1, y0);
+    pos.setX(i*2, x0);
+    pos.setX(i*2+1, x0);
+    bpos.setY(i*2, y0-0.02);
+    bpos.setY(i*2+1, y0-0.02);
+    bpos.setX(i*2, x0);
+    bpos.setX(i*2+1, x0);
+  }
+  pos.needsUpdate = true;
+  bpos.needsUpdate = true;
+  geo.computeVertexNormals();
+  back.geometry.computeVertexNormals();
+}
+
+/* 局部坐标 → 世界坐标（应用斜放角度） */
+function localToWorld(lx, ly){
+  return new V3(lx*Math.cos(SCROLL_ANGLE), ly, -lx*Math.sin(SCROLL_ANGLE));
+}
+
+/* ---------- 段落 + DOM 面板 ---------- */
+var SECTIONS = [
+  {key:'about',   u:0.08, tx:'简首', st:'ABOUT'},
+  {key:'skills',  u:0.30, tx:'技艺', st:'SKILLS'},
+  {key:'works',   u:0.52, tx:'作品', st:'WORKS'},
+  {key:'journey', u:0.72, tx:'年表', st:'JOURNEY'},
+  {key:'contact', u:0.92, tx:'落款', st:'CONTACT'}
+];
+var panels = [];
+SECTIONS.forEach(function(c){
+  var el = document.getElementById('pn-'+c.key);
+  var w = localToWorld(-SLIP_L/2 + c.u*SLIP_L, 2.6);
+  panels.push({
+    key:c.key, cfg:c, el:el,
+    pos:w,
+    nrm:new V3(0,-0.3,0.95).normalize(),
+    right:new V3(Math.cos(SCROLL_ANGLE), 0, -Math.sin(SCROLL_ANGLE)),
+    cssW: el.offsetWidth||580, w:7.6
+  });
+});
+function updatePanelAnchors(){
+  var p = scrollPos;
+  for(var i=0;i<panels.length;i++){
+    var pl = panels[i];
+    var u = pl.cfg.u;
+    var px, py;
+    if(u <= p){ px = -SLIP_L/2 + u*SLIP_L; py = 0; }
+    else { var s=(u-p)*SLIP_L, a=s/R0, r=R0+0.035*a, cx=-SLIP_L/2+p*SLIP_L; px=cx+r*Math.sin(a); py=R0-r*Math.cos(a); }
+    var w = localToWorld(px, py+2.7);
+    pl.pos.set(w.x, w.y, w.z);
+  }
+}
+var _pv=new V3(), _pr=new V3();
+function projectPanel(el, pos, nrm, right, w, cssW, active){
+  var facing = camera.position.clone().sub(pos).normalize().dot(nrm);
+  _pv.copy(pos).project(camera);
+  _pr.copy(pos).addScaledVector(right, w*0.5).project(camera);
+  var behind = _pv.z > 1;
+  var x1=(_pv.x*0.5+0.5)*window.innerWidth, y1=(-_pv.y*0.5+0.5)*window.innerHeight;
+  var x2=(_pr.x*0.5+0.5)*window.innerWidth, y2=(-_pr.y*0.5+0.5)*window.innerHeight;
+  var dx=x2-x1, dy=y2-y1;
+  var pxW = Math.sqrt(dx*dx+dy*dy)*2;
+  var ang = Math.atan2(dy,dx)*180/Math.PI;
+  var s = clamp(pxW/cssW, 0.05, 1.6);
+  var op = (behind || facing<0.02) ? 0 : clamp(facing*3.0, 0, 1);
+  if(camera.position.distanceTo(pos) > 70) op = 0;
+  el.style.transform = 'translate3d('+x1.toFixed(1)+'px,'+y1.toFixed(1)+'px,0) translate(-50%,-50%) rotate('+ang.toFixed(2)+'deg) scale('+s.toFixed(3)+')';
+  el.style.opacity = op.toFixed(3);
+  el.style.pointerEvents = (op>0.4 && s>0.3) ? 'auto' : 'none';
+  el.classList.toggle('on', !!active);
+}
+function updatePanels(){
+  for(var i=0;i<panels.length;i++){
+    var p=panels[i];
+    var unfolded = p.cfg.u <= scrollPos + 0.02;
+    var dist = camera.position.distanceTo(p.pos);
+    var near = dist < 26;
+    var show = unfolded && near;
+    if(p.key !== activeKey && !show){ p.el.style.opacity = 0; p.el.style.pointerEvents='none'; continue; }
+    projectPanel(p.el, p.pos, p.nrm, p.right, p.w, p.cssW, p.key===activeKey);
+    if(p.key !== activeKey){
+      var cur = parseFloat(p.el.style.opacity||0);
+      p.el.style.opacity = (cur*0.5).toFixed(3);
+      p.el.style.pointerEvents = 'none';
+    }
+  }
+}
+
+/* ---------- 相机 ---------- */
+var rig = {
+  target:new V3(-16,1,-10), yaw:-0.5, pitch:0.42, dist:22,
+  tTarget:new V3(-16,1,-10), tYaw:-0.5, tPitch:0.42, tDist:22,
+  tween:0, dur:1.5, active:false
+};
+function flyTo(o, dur){
+  rig.tTarget.set(o.t[0],o.t[1],o.t[2]);
+  rig.tYaw=o.yaw; rig.tPitch=o.pitch; rig.tDist=o.dist;
+  rig.active=true; rig.tween=0; rig.dur=dur||1.5;
+}
+function updateRig(dt){
+  if(rig.active){
+    rig.tween += dt/rig.dur;
+    var e = rig.tween<0.5 ? 4*rig.tween*rig.tween*rig.tween : 1-Math.pow(-2*rig.tween+2,3)/2;
+    rig.target.lerp(rig.tTarget, clamp(e*0.13+0.01,0,1));
+    rig.yaw   = lerp(rig.yaw, rig.tYaw, clamp(e*0.12+0.01,0,1));
+    rig.pitch = lerp(rig.pitch, rig.tPitch, clamp(e*0.12+0.01,0,1));
+    rig.dist  = lerp(rig.dist, rig.tDist, clamp(e*0.12+0.01,0,1));
+    if(rig.tween>=1.5) rig.active=false;
+  } else if(!drag.on){
+    rig.yaw += dt*0.008;
+    if(!activeKey){
+      var cxL = -SLIP_L/2 + scrollPos*SLIP_L*0.5;
+      var cw = localToWorld(cxL, 0);
+      rig.target.x = lerp(rig.target.x, cw.x, 1-Math.pow(0.35, dt));
+      rig.target.z = lerp(rig.target.z, cw.z, 1-Math.pow(0.35, dt));
+    }
+  }
+  var cp=Math.cos(rig.pitch), sp=Math.sin(rig.pitch);
+  camera.position.set(rig.target.x + Math.sin(rig.yaw)*cp*rig.dist, rig.target.y + sp*rig.dist, rig.target.z + Math.cos(rig.yaw)*cp*rig.dist);
+  camera.lookAt(rig.target);
+}
+var activeKey = null;
+function setHud(name, desc){
+  document.getElementById('hudT').textContent = name;
+  document.getElementById('hudD').textContent = desc;
+  var as = document.querySelectorAll('#nav a.wp');
+  for(var i=0;i<as.length;i++) as[i].classList.toggle('active', as[i].dataset.wp===activeKey);
+}
+function focusSection(k){
+  for(var i=0;i<panels.length;i++){
+    if(panels[i].key===k){
+      activeKey = k;
+      scrollTarget = Math.min(1, panels[i].cfg.u + 0.06);
+      var pw = localToWorld(-SLIP_L/2 + panels[i].cfg.u*SLIP_L, 2.2);
+      flyTo({t:[pw.x, 2.2, pw.z], yaw:Math.atan2(pw.x, pw.z), pitch:0.3, dist:11}, 1.4);
+      setHud(panels[i].cfg.tx, panels[i].cfg.st);
+      return;
+    }
+  }
+}
+function goTop(){
+  activeKey = null;
+  flyTo({t:[0,1,0], yaw:rig.yaw, pitch:0.42, dist:30}, 1.5);
+  setHud('竹简','缓缓展开，一简一世界');
+}
+
+/* ---------- 交互 ---------- */
+var drag = {on:false, x:0, y:0, moved:0};
+var ray = new THREE.Raycaster(), mouse = {x:0,y:0,moved:false};
+var tipEl = document.getElementById('tip');
+canvas.addEventListener('pointerdown', function(e){
+  drag.on=true; drag.x=e.clientX; drag.y=e.clientY; drag.moved=0;
+  canvas.classList.add('grabbing');
+  if(canvas.setPointerCapture){ try{ canvas.setPointerCapture(e.pointerId); }catch(err){} }
+});
+window.addEventListener('pointermove', function(e){
+  if(drag.on){
+    var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    drag.moved += Math.abs(dx)+Math.abs(dy);
+    rig.yaw -= dx*0.005;
+    rig.pitch = clamp(rig.pitch + dy*0.003, 0.1, 1.15);
+    drag.x=e.clientX; drag.y=e.clientY;
+    rig.active=false;
+  }
+  mouse.x=(e.clientX/window.innerWidth)*2-1;
+  mouse.y=-(e.clientY/window.innerHeight)*2+1;
+  mouse.moved=true;
+  tipEl.style.left=e.clientX+'px'; tipEl.style.top=e.clientY+'px';
+});
+window.addEventListener('pointerup', function(e){
+  if(drag.on && drag.moved<6) doPick(e.clientX, e.clientY);
+  drag.on=false; canvas.classList.remove('grabbing');
+});
+canvas.addEventListener('wheel', function(e){
+  e.preventDefault();
+  if(e.ctrlKey){
+    rig.dist = clamp(rig.dist*(e.deltaY>0?1.09:0.92), 8, 70);
+    rig.active=false;
+  } else {
+    scrollTarget = clamp(scrollTarget + (e.deltaY>0?-0.06:0.06), 0.06, 1);
+    intro = false;
+    document.getElementById('sP').value = Math.round(scrollTarget*100);
+  }
+},{passive:false});
+window.addEventListener('keydown', function(e){ if(e.key==='Escape') goTop(); });
+
+function pickU(hitPoint){
+  var lp = scrollGroup.worldToLocal(hitPoint.clone());
+  return (lp.x + SLIP_L/2) / SLIP_L;
+}
+function doPick(px,py){
+  mouse.x=(px/window.innerWidth)*2-1;
+  mouse.y=-(py/window.innerHeight)*2+1;
+  ray.setFromCamera(mouse, camera);
+  var hit = ray.intersectObject(slip, false);
+  if(hit.length){
+    var u = pickU(hit[0].point);
+    var best=null, bd=1e9;
+    for(var i=0;i<SECTIONS.length;i++){ var d=Math.abs(SECTIONS[i].u - u); if(d<bd){ bd=d; best=SECTIONS[i]; } }
+    if(best && bd<0.12){ focusSection(best.key); }
+  }
+}
+function hoverTip(){
+  if(drag.on || !mouse.moved){ tipEl.style.opacity=0; return; }
+  ray.setFromCamera(mouse, camera);
+  var hit = ray.intersectObject(slip, false);
+  if(hit.length){
+    var u = pickU(hit[0].point);
+    var best=null, bd=1e9;
+    for(var i=0;i<SECTIONS.length;i++){ var d=Math.abs(SECTIONS[i].u - u); if(d<bd){ bd=d; best=SECTIONS[i]; } }
+    if(best && bd<0.12){ tipEl.textContent='细读「'+best.tx+'」'; tipEl.style.opacity=0.95; canvas.style.cursor='pointer'; return; }
+  }
+  tipEl.style.opacity=0; canvas.style.cursor=drag.on?'grabbing':'grab';
+}
+
+/* ---------- 控制台 ---------- */
+var vPEl = document.getElementById('vP');
+function bindSlider(id, cb){
+  var el=document.getElementById(id);
+  el.addEventListener('input', function(){ cb(parseFloat(el.value)); });
+  cb(parseFloat(el.value));
+}
+bindSlider('sP', function(v){ scrollTarget = v/100; intro=false; });
+document.getElementById('bAll').onclick = function(){ scrollTarget=1; intro=false; document.getElementById('sP').value=100; };
+document.getElementById('bRoll').onclick = function(){ scrollTarget=0.06; intro=false; document.getElementById('sP').value=6; };
+document.getElementById('bTop').onclick = goTop;
+var tourBtn = document.getElementById('bTour');
+var tour = {on:false, i:0, t:0};
+tourBtn.onclick = function(){ tour.on=!tour.on; tourBtn.classList.toggle('on', tour.on); };
+document.getElementById('dockTg').onclick = function(){ document.getElementById('dock').classList.toggle('min'); };
+var navLinks = document.querySelectorAll('#nav a.wp');
+for(var ni=0;ni<navLinks.length;ni++){
+  navLinks[ni].addEventListener('click', function(){ focusSection(this.dataset.wp); });
+}
+
+/* ---------- 主循环 ---------- */
+var clock = new THREE.Clock(), timeNow = 0, tipT = 0;
+setHud('竹简','缓缓展开，一简一世界');
+function animate(){
+  requestAnimationFrame(animate);
+  var dt = Math.min(clock.getDelta(), 0.05);
+  timeNow += dt;
+  if(intro){
+    introT += dt;
+    // 用 ease 让展开更自然
+    var t = clamp(introT/8, 0, 1);
+    scrollTarget = 0.06 + (1-0.06) * (t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2);
+    if(introT>8){ intro=false; }
+  }
+  scrollPos = lerp(scrollPos, scrollTarget, 1-Math.pow(0.025, dt));
+  updateScroll();
+  updatePanelAnchors();
+  vPEl.textContent = Math.round(scrollPos*100)+'%';
+  document.getElementById('progI').style.width = (scrollPos*100).toFixed(1)+'%';
+
+  if(tour.on){
+    tour.t += dt;
+    if(tour.t > 6){ tour.t=0; tour.i=(tour.i+1)%SECTIONS.length; focusSection(SECTIONS[tour.i].key); }
+  }
+  updateRig(dt);
+  updatePanels();
+  tipT += dt;
+  if(tipT>0.1){ tipT=0; hoverTip(); }
+  renderer.render(scene, camera);
+}
+animate();
+window.addEventListener('resize', function(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+setTimeout(function(){
+  document.getElementById('ldbar').style.width='100%';
+  setTimeout(function(){ document.getElementById('loader').classList.add('gone'); }, 280);
+}, 500);
+})();
+</script>
+</body>
+</html>

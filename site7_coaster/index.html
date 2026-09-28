@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>林澈 · 创意技术工程师 | 云霄轨道</title>
+<style>
+:root{
+  --acc:#ff8a3c; --acc2:#ffd28a; --steel:#8fa8c8;
+  --txt:#eef2f8; --muted:#9fb2c8; --line:rgba(255,255,255,.10); --ink:#0b1220;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:#0b1220;color:var(--txt);overflow:hidden;
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;user-select:none;
+}
+canvas#bg{position:fixed;inset:0;display:block;z-index:0;background:#0b1220;cursor:crosshair;touch-action:none}
+#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(125% 95% at 50% 44%,rgba(0,0,0,0) 40%,rgba(6,10,22,.42) 76%,rgba(3,6,14,.85) 100%)}
+#speedlines{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .4s;
+  background:
+   repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 90px),
+   repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 70px);
+  mask-image:radial-gradient(circle at 50% 50%,transparent 30%,#000 90%);
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,transparent 30%,#000 90%)}
+
+#nav{position:fixed;top:0;left:0;right:0;z-index:22;display:flex;align-items:center;justify-content:space-between;
+  padding:13px 26px;background:linear-gradient(180deg,rgba(8,13,26,.82),rgba(8,13,26,0))}
+#logo{font-weight:800;letter-spacing:.16em;font-size:14px;display:flex;align-items:center;gap:10px}
+#logo i{width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 14px 3px rgba(255,138,60,.4);
+  display:inline-block;animation:pulse 2.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+#logo small{font-weight:400;letter-spacing:.06em;color:var(--muted);font-size:11px}
+#nav ul{display:flex;gap:20px;list-style:none}
+#nav a{color:var(--muted);text-decoration:none;font-size:12.5px;letter-spacing:.1em;cursor:pointer;
+  transition:.25s;padding:5px 2px;border-bottom:1px solid transparent}
+#nav a:hover,#nav a.active{color:var(--acc2);border-bottom-color:var(--acc)}
+@media(max-width:820px){#nav ul{gap:12px}#nav a{font-size:11px}#logo small{display:none}}
+
+#overlay{position:fixed;inset:0;z-index:8;pointer-events:none}
+.pn{position:absolute;left:0;top:0;width:620px;transform-origin:50% 50%;opacity:0;
+  will-change:transform,opacity;pointer-events:none}
+.pn-in{position:relative;width:620px;padding:24px 28px 26px;
+  background:linear-gradient(160deg,rgba(14,20,36,.93),rgba(8,12,24,.95));
+  border:1px solid rgba(255,138,60,.35);border-radius:4px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.5) inset,0 26px 60px rgba(0,0,0,.6),0 0 46px rgba(255,138,60,.08)}
+.pn-in::before{content:"";position:absolute;inset:7px;border:1px solid rgba(255,138,60,.15);pointer-events:none}
+.pn.on .pn-in{border-color:rgba(255,210,138,.6);box-shadow:0 0 0 1px rgba(0,0,0,.5) inset,0 26px 70px rgba(0,0,0,.65),0 0 64px rgba(255,138,60,.22)}
+.pn-hd{display:flex;align-items:baseline;gap:12px;margin-bottom:13px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.pn-nm{font-family:"Segoe UI","PingFang SC",sans-serif;font-weight:800;font-size:26px;color:var(--acc2);line-height:1}
+.pn-tt{font-size:12px;letter-spacing:.26em;color:var(--muted)}
+.pn-sub{font-size:14.5px;color:var(--txt);opacity:.93;line-height:1.85;margin-bottom:12px}
+.pn-sub b{color:var(--acc2);font-weight:600}
+.row{display:flex;gap:24px;flex-wrap:wrap}
+.col{flex:1;min-width:190px}
+.lbl{font-size:10.5px;letter-spacing:.2em;color:var(--muted);margin:8px 0 7px}
+.bar{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.bar span{width:84px;font-size:12px;color:var(--txt);opacity:.86}
+.bar i{flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;display:block}
+.bar i u{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.bar em{width:30px;text-align:right;font-style:normal;font-size:11px;color:var(--muted)}
+.card{border:1px solid var(--line);border-left:2px solid var(--acc);padding:10px 14px;margin-bottom:9px;
+  background:rgba(255,255,255,.03);cursor:pointer;transition:.22s}
+.card:hover{background:rgba(255,138,60,.10);transform:translateX(4px)}
+.card h4{font-size:14px;color:var(--acc2);margin-bottom:3px}
+.card p{font-size:11.5px;color:var(--muted);line-height:1.7}
+.tl{position:relative;padding-left:16px}
+.tl::before{content:"";position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,var(--acc),transparent)}
+.tl li{list-style:none;position:relative;margin-bottom:11px}
+.tl li::before{content:"";position:absolute;left:-16px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.tl h5{font-size:13px;color:var(--txt)}
+.tl time{font-size:10.5px;color:var(--acc);display:block;margin-bottom:2px}
+.tl p{font-size:11.5px;color:var(--muted);line-height:1.65}
+.contacts{display:flex;gap:9px;flex-wrap:wrap;margin-top:4px}
+.contacts a{font-size:11.5px;color:var(--txt);text-decoration:none;border:1px solid var(--line);
+  padding:7px 13px;background:rgba(255,255,255,.03);transition:.22s;pointer-events:auto}
+.contacts a:hover{border-color:var(--acc);color:var(--acc2)}
+.hintline{font-size:10.5px;color:var(--muted);margin-top:11px;opacity:.8}
+
+#hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:16px 26px;pointer-events:none;background:linear-gradient(0deg,rgba(8,13,26,.85),rgba(8,13,26,0))}
+#speedo{display:flex;align-items:baseline;gap:8px}
+#speedo b{font-size:40px;font-weight:800;color:var(--acc2);font-variant-numeric:tabular-nums;text-shadow:0 0 24px rgba(255,138,60,.35)}
+#speedo span{font-size:11px;color:var(--muted);letter-spacing:.2em}
+#hudL .k{font-size:9.5px;letter-spacing:.3em;color:var(--acc)}
+#hudL .v{font-family:"Segoe UI","PingFang SC",sans-serif;font-weight:700;font-size:19px;color:var(--acc2);letter-spacing:.05em}
+#hudL .d{font-size:11px;color:var(--muted);margin-top:2px}
+#prog{width:220px;height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:8px;overflow:hidden}
+#prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+#hudR{text-align:right;font-size:10.5px;color:var(--muted);line-height:1.9}
+#hudR b{color:var(--acc2);font-weight:500}
+#dock{position:fixed;right:22px;top:78px;z-index:21;width:200px;padding:14px 15px 15px;
+  background:linear-gradient(160deg,rgba(14,20,36,.88),rgba(8,12,24,.92));
+  border:1px solid var(--line);border-radius:4px;box-shadow:0 18px 44px rgba(0,0,0,.5)}
+#dock h3{font-size:10px;letter-spacing:.24em;color:var(--acc);margin-bottom:12px;
+  border-bottom:1px solid var(--line);padding-bottom:8px;display:flex;justify-content:space-between}
+#dock h3 button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px}
+#dock.min #dockBody{display:none}
+.ctrl{margin-bottom:11px}
+.ctrl label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:5px}
+.ctrl label b{color:var(--acc2);font-weight:500}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:rgba(255,255,255,.14);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--acc);box-shadow:0 0 9px rgba(255,138,60,.5);cursor:pointer}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.btns button{flex:1;min-width:54px;font-size:10.5px;padding:6px 4px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);border-radius:3px;transition:.2s}
+.btns button:hover{color:var(--acc2);border-color:var(--acc)}
+.btns button.on{background:rgba(255,138,60,.18);color:var(--acc2);border-color:var(--acc)}
+#tip{position:fixed;z-index:24;pointer-events:none;padding:6px 10px;font-size:11px;
+  background:rgba(8,13,26,.92);border:1px solid rgba(255,138,60,.4);color:var(--acc2);
+  border-radius:3px;opacity:0;transform:translate(14px,14px);white-space:nowrap}
+#loader{position:fixed;inset:0;z-index:60;background:#0b1220;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;transition:opacity .8s}
+#loader .t{font-size:24px;font-weight:800;color:var(--acc2);letter-spacing:.3em}
+#loader .b{width:190px;height:2px;background:rgba(255,255,255,.12)}
+#loader .b i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+#loader.gone{opacity:0;pointer-events:none}
+@media(max-width:900px){#dock{display:none}#hudR{display:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="vignette"></div>
+<div id="speedlines"></div>
+
+<nav id="nav">
+  <div id="logo"><i></i>林澈 <small>CREATIVE TECHNOLOGIST</small></div>
+  <ul>
+    <li><a class="wp" data-wp="about">车站</a></li>
+    <li><a class="wp" data-wp="skills">爬升段</a></li>
+    <li><a class="wp" data-wp="works">回环段</a></li>
+    <li><a class="wp" data-wp="journey">螺旋段</a></li>
+    <li><a class="wp" data-wp="contact">终点</a></li>
+  </ul>
+</nav>
+
+<div id="overlay">
+  <article class="pn" id="pn-about">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">01</div><div><div class="pn-tt">STATION / 车站</div></div></div>
+      <p class="pn-sub">我是<b>林澈</b>，创意技术工程师。这一站是站台，也是主页的第一屏。</p>
+      <p class="pn-sub">这条轨道里有爬升、俯冲、回环和螺旋——像我做过的每一个项目：<b>先花很长的时间把自己抬到高处，然后赌一个值得的俯冲。</b>抓住扶手，出发。</p>
+      <div class="hintline">▸ 移动鼠标环视 · 空格刹车 · 下一站见</div>
+    </div>
+  </article>
+
+  <article class="pn" id="pn-skills">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">02</div><div><div class="pn-tt">LIFT HILL / 爬升段</div></div></div>
+      <div class="row">
+        <div class="col">
+          <div class="lbl">动力</div>
+          <div class="bar"><span>WebGL / Three</span><i><u style="width:95%"></u></i><em>95</em></div>
+          <div class="bar"><span>GLSL</span><i><u style="width:86%"></u></i><em>86</em></div>
+          <div class="bar"><span>TypeScript</span><i><u style="width:90%"></u></i><em>90</em></div>
+        </div>
+        <div class="col">
+          <div class="lbl">配重</div>
+          <div class="bar"><span>程序化建模</span><i><u style="width:82%"></u></i><em>82</em></div>
+          <div class="bar"><span>动效叙事</span><i><u style="width:85%"></u></i><em>85</em></div>
+          <div class="bar"><span>装置联动</span><i><u style="width:73%"></u></i><em>73</em></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="pn" id="pn-works">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">03</div><div><div class="pn-tt">LOOP / 回环段</div></div></div>
+      <div class="card"><h4>《长明火》— 实时火山模拟</h4><p>GPU 粒子热对流近似，四十万颗粒子稳定 60fps。</p></div>
+      <div class="card"><h4>《视界之外》— 引力透镜可视化</h4><p>raymarching 求解光线偏折，把黑洞做成可以行走的场景。</p></div>
+      <div class="card"><h4>《九驾》— 西周车马复原</h4><p>按考古报告重建车马器比例，知识做进交互里。</p></div>
+    </div>
+  </article>
+
+  <article class="pn" id="pn-journey">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">04</div><div><div class="pn-tt">HELIX / 螺旋段</div></div></div>
+      <ul class="tl">
+        <li><time>2023 — 至今</time><h5>独立创意技术</h5><p>为品牌与美术馆做实时图形装置。</p></li>
+        <li><time>2020 — 2023</time><h5>互娱科技 · 高级前端</h5><p>渲染管线、性能与动效体系。</p></li>
+        <li><time>2018 — 2020</time><h5>数字工作室 · 交互开发</h5><p>线下装置与机构控制。</p></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="pn" id="pn-contact">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">05</div><div><div class="pn-tt">FINALE / 终点</div></div></div>
+      <p class="pn-sub">车会回到站台，人还可以再出发。想一起修一条更疯的轨道？</p>
+      <div class="contacts">
+        <a href="mailto:hello@linche.studio">✉ hello@linche.studio</a>
+        <a>GitHub / linche</a>
+        <a>微信 / linche_dev</a>
+      </div>
+      <div class="hintline">▸ 点「再次发车」可以再跑一遍</div>
+    </div>
+  </article>
+</div>
+
+<aside id="dock">
+  <h3><span>操纵台 / RIDE OPS</span><button id="dockTg">—</button></h3>
+  <div id="dockBody">
+    <div class="ctrl"><label>车速 <b id="vSpd">1.0×</b></label>
+      <input id="sSpd" type="range" min="20" max="220" step="1" value="100"></div>
+    <div class="ctrl"><label>视野灵敏度 <b id="vLook">1.0×</b></label>
+      <input id="sLook" type="range" min="30" max="200" step="1" value="100"></div>
+    <div class="btns">
+      <button id="bGo">发车 / 再来</button><button id="bBrake">刹车</button>
+    </div>
+    <div class="btns">
+      <button id="bPOV">第一视角</button><button id="bChase">追尾视角</button>
+    </div>
+  </div>
+</aside>
+
+<div id="hud">
+  <div id="hudL">
+    <div class="k">NOW PASSING</div><div class="v" id="hudT">车站</div><div class="d" id="hudD">扣好安全杆</div>
+    <div id="prog"><i id="progI"></i></div>
+  </div>
+  <div id="speedo"><b id="kmh">0</b><span>KM/H</span></div>
+  <div id="hudR">
+    <div><b>鼠标</b> 环视 · <b>空格</b> 刹车</div>
+    <div><b>点击站台牌</b> 靠站阅读</div>
+  </div>
+</div>
+
+<div id="tip"></div>
+<div id="loader"><div class="t">云 霄 轨 道</div><div class="b"><i id="ldbar"></i></div></div>
+
+<script src="lib/three.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

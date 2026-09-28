@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>林澈 · 创意技术工程师 | 太阳系主页</title>
+<style>
+:root{
+  --acc:#7fb2ff; --acc2:#dbe8ff; --gold:#ffca7a; --glow:rgba(127,178,255,.3);
+  --txt:#e2e9f6; --muted:#8494b0; --line:rgba(255,255,255,.10); --ink:#020409;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:#020409;color:var(--txt);overflow:hidden;
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;user-select:none;
+}
+canvas#bg{position:fixed;inset:0;display:block;z-index:0;background:#020409;cursor:grab;touch-action:none}
+canvas#bg.grabbing{cursor:grabbing}
+#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 92% at 50% 46%,rgba(0,0,0,0) 38%,rgba(2,4,10,.5) 74%,rgba(0,1,4,.94) 100%)}
+#grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/></filter><rect width='128' height='128' filter='url(%23n)'/></svg>")}
+
+#nav{position:fixed;top:0;left:0;right:0;z-index:22;display:flex;align-items:center;justify-content:space-between;
+  padding:13px 26px;background:linear-gradient(180deg,rgba(2,4,9,.86),rgba(2,4,9,0))}
+#logo{font-weight:800;letter-spacing:.16em;font-size:14px;display:flex;align-items:center;gap:10px}
+#logo i{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px 3px rgba(255,202,122,.4);
+  display:inline-block;animation:pulse 2.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+#logo small{font-weight:400;letter-spacing:.06em;color:var(--muted);font-size:11px}
+#nav ul{display:flex;gap:20px;list-style:none}
+#nav a{color:var(--muted);text-decoration:none;font-size:12.5px;letter-spacing:.1em;cursor:pointer;
+  transition:.25s;padding:5px 2px;border-bottom:1px solid transparent}
+#nav a:hover,#nav a.active{color:var(--acc2);border-bottom-color:var(--acc)}
+@media(max-width:820px){#nav ul{gap:12px}#nav a{font-size:11px}#logo small{display:none}}
+
+#overlay{position:fixed;inset:0;z-index:8;pointer-events:none}
+.pn{position:absolute;left:0;top:0;width:620px;transform-origin:50% 50%;opacity:0;
+  will-change:transform,opacity;pointer-events:none}
+.pn-in{position:relative;width:620px;padding:24px 28px 26px;
+  background:linear-gradient(165deg,rgba(8,14,30,.93),rgba(3,6,14,.96));
+  border:1px solid rgba(127,178,255,.32);border-radius:3px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.5) inset,0 26px 60px rgba(0,0,0,.6),0 0 44px rgba(127,178,255,.07)}
+.pn-in::before{content:"";position:absolute;inset:7px;border:1px solid rgba(127,178,255,.15);pointer-events:none}
+.pn.on .pn-in{border-color:rgba(219,232,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.5) inset,0 26px 70px rgba(0,0,0,.65),0 0 60px rgba(127,178,255,.18)}
+.pn-hd{display:flex;align-items:baseline;gap:12px;margin-bottom:13px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.pn-nm{font-family:Georgia,"Times New Roman",serif;font-size:24px;color:var(--acc2);line-height:1;letter-spacing:.08em}
+.pn-tt{font-size:12px;letter-spacing:.26em;color:var(--muted)}
+.pn-sub{font-size:14.5px;color:var(--txt);opacity:.93;line-height:1.85;margin-bottom:12px}
+.pn-sub b{color:var(--acc2);font-weight:600}
+.row{display:flex;gap:24px;flex-wrap:wrap}
+.col{flex:1;min-width:190px}
+.lbl{font-size:10.5px;letter-spacing:.2em;color:var(--muted);margin:8px 0 7px}
+.bar{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.bar span{width:84px;font-size:12px;color:var(--txt);opacity:.86}
+.bar i{flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;display:block}
+.bar i u{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--acc))}
+.bar em{width:30px;text-align:right;font-style:normal;font-size:11px;color:var(--muted)}
+.card{border:1px solid var(--line);border-left:2px solid var(--gold);padding:10px 14px;margin-bottom:9px;
+  background:rgba(255,255,255,.03);cursor:pointer;transition:.22s}
+.card:hover{background:rgba(127,178,255,.10);transform:translateX(4px)}
+.card h4{font-size:14px;color:var(--acc2);margin-bottom:3px}
+.card p{font-size:11.5px;color:var(--muted);line-height:1.7}
+.tl{position:relative;padding-left:16px}
+.tl::before{content:"";position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,var(--gold),transparent)}
+.tl li{list-style:none;position:relative;margin-bottom:11px}
+.tl li::before{content:"";position:absolute;left:-16px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.tl h5{font-size:13px;color:var(--txt)}
+.tl time{font-size:10.5px;color:var(--gold);display:block;margin-bottom:2px}
+.tl p{font-size:11.5px;color:var(--muted);line-height:1.65}
+.contacts{display:flex;gap:9px;flex-wrap:wrap;margin-top:4px}
+.contacts a{font-size:11.5px;color:var(--txt);text-decoration:none;border:1px solid var(--line);
+  padding:7px 13px;background:rgba(255,255,255,.03);transition:.22s;pointer-events:auto}
+.contacts a:hover{border-color:var(--acc);color:var(--acc2)}
+.hintline{font-size:10.5px;color:var(--muted);margin-top:11px;opacity:.8}
+
+#hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:16px 26px;pointer-events:none;background:linear-gradient(0deg,rgba(2,4,9,.85),rgba(2,4,9,0))}
+#hudL .k{font-size:9.5px;letter-spacing:.3em;color:var(--gold)}
+#hudL .v{font-size:20px;font-weight:700;color:var(--acc2);letter-spacing:.05em}
+#hudL .d{font-size:11px;color:var(--muted);margin-top:2px}
+#hudR{text-align:right;font-size:10.5px;color:var(--muted);line-height:1.9}
+#hudR b{color:var(--acc2);font-weight:500}
+#dock{position:fixed;right:22px;top:78px;z-index:21;width:198px;padding:14px 15px 15px;
+  background:linear-gradient(160deg,rgba(8,14,30,.9),rgba(3,6,14,.94));
+  border:1px solid var(--line);border-radius:3px;box-shadow:0 18px 44px rgba(0,0,0,.55)}
+#dock h3{font-size:10px;letter-spacing:.24em;color:var(--gold);margin-bottom:12px;
+  border-bottom:1px solid var(--line);padding-bottom:8px;display:flex;justify-content:space-between}
+#dock h3 button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px}
+#dock.min #dockBody{display:none}
+.ctrl{margin-bottom:11px}
+.ctrl label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:5px}
+.ctrl label b{color:var(--acc2);font-weight:500}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:rgba(255,255,255,.14);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 9px rgba(255,202,122,.5);cursor:pointer}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.btns button{flex:1;min-width:54px;font-size:10.5px;padding:6px 4px;cursor:pointer;
+  background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);border-radius:3px;transition:.2s}
+.btns button:hover{color:var(--acc2);border-color:var(--acc)}
+.btns button.on{background:rgba(127,178,255,.16);color:var(--acc2);border-color:var(--acc)}
+#tip{position:fixed;z-index:24;pointer-events:none;padding:6px 10px;font-size:11px;
+  background:rgba(2,4,9,.92);border:1px solid rgba(127,178,255,.4);color:var(--acc2);
+  border-radius:3px;opacity:0;transform:translate(14px,14px);white-space:nowrap}
+#loader{position:fixed;inset:0;z-index:60;background:#020409;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;transition:opacity .8s}
+#loader .t{font-size:22px;font-weight:700;color:var(--acc2);letter-spacing:.34em}
+#loader .b{width:190px;height:2px;background:rgba(255,255,255,.12)}
+#loader .b i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+#loader.gone{opacity:0;visibility:hidden;pointer-events:none}
+@media(max-width:900px){#dock{display:none}#hudR{display:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="vignette"></div>
+<div id="grain"></div>
+
+<nav id="nav">
+  <div id="logo"><i></i>林澈 <small>CREATIVE TECHNOLOGIST</small></div>
+  <ul>
+    <li><a class="wp" data-wp="sun">太阳</a></li>
+    <li><a class="wp" data-wp="about">水星</a></li>
+    <li><a class="wp" data-wp="skills">金星</a></li>
+    <li><a class="wp" data-wp="works">地球</a></li>
+    <li><a class="wp" data-wp="journey">火星</a></li>
+    <li><a class="wp" data-wp="contact">木星</a></li>
+  </ul>
+</nav>
+
+<div id="overlay">
+  <article class="pn" id="pn-about">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">MERCURY</div><div><div class="pn-tt">水星 · 关于</div></div></div>
+      <p class="pn-sub">我是<b>林澈</b>，创意技术工程师。离太阳最近的水星没有大气，昼夜温差六百度——像极了独立开发者的日程表。</p>
+      <p class="pn-sub">但正是这种地方磨出来的东西最结实：我在浏览器里造过火山、黑洞、鲸与车马，<b>每一次都先扛住极端环境，再谈优雅。</b></p>
+      <div class="hintline">▸ 点击行星可以驻留观察 · 时间流速可调</div>
+    </div>
+  </article>
+
+  <article class="pn" id="pn-skills">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">VENUS</div><div><div class="pn-tt">金星 · 技艺</div></div></div>
+      <div class="row">
+        <div class="col">
+          <div class="lbl">内行星</div>
+          <div class="bar"><span>WebGL / Three</span><i><u style="width:95%"></u></i><em>95</em></div>
+          <div class="bar"><span>GLSL</span><i><u style="width:86%"></u></i><em>86</em></div>
+          <div class="bar"><span>TypeScript</span><i><u style="width:90%"></u></i><em>90</em></div>
+        </div>
+        <div class="col">
+          <div class="lbl">外行星</div>
+          <div class="bar"><span>程序化建模</span><i><u style="width:82%"></u></i><em>82</em></div>
+          <div class="bar"><span>动效叙事</span><i><u style="width:85%"></u></i><em>85</em></div>
+          <div class="bar"><span>装置联动</span><i><u style="width:73%"></u></i><em>73</em></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="pn" id="pn-works">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">EARTH</div><div><div class="pn-tt">地球 · 作品</div></div></div>
+      <div class="card"><h4>《长明火》— 实时火山模拟</h4><p>GPU 粒子热对流近似，四十万颗粒子稳定 60fps。</p></div>
+      <div class="card"><h4>《视界之外》— 引力透镜可视化</h4><p>raymarching 求解光线偏折，把黑洞做成可以行走的场景。</p></div>
+      <div class="card"><h4>《九驾》— 西周车马复原</h4><p>按考古报告重建车马器比例，知识做进交互里。</p></div>
+    </div>
+  </article>
+
+  <article class="pn" id="pn-journey">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">MARS</div><div><div class="pn-tt">火星 · 履历</div></div></div>
+      <ul class="tl">
+        <li><time>2023 — 至今</time><h5>独立创意技术</h5><p>为品牌与美术馆做实时图形装置。</p></li>
+        <li><time>2020 — 2023</time><h5>互娱科技 · 高级前端</h5><p>渲染管线、性能与动效体系。</p></li>
+        <li><time>2018 — 2020</time><h5>数字工作室 · 交互开发</h5><p>线下装置与机构控制。</p></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="pn" id="pn-contact">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">JUPITER</div><div><div class="pn-tt">木星 · 联络</div></div></div>
+      <p class="pn-sub">木星用引力替内太阳系挡了亿万次撞击。想做彼此的引力伙伴？</p>
+      <div class="contacts">
+        <a href="mailto:hello@linche.studio">✉ hello@linche.studio</a>
+        <a>GitHub / linche</a>
+        <a>微信 / linche_dev</a>
+      </div>
+      <div class="hintline">▸ 把时间流速拉满，看一次完整的公转</div>
+    </div>
+  </article>
+</div>
+
+<aside id="dock">
+  <h3><span>任务控制 / MISSION CTRL</span><button id="dockTg">—</button></h3>
+  <div id="dockBody">
+    <div class="ctrl"><label>时间流速 <b id="vTime">1 天/秒</b></label>
+      <input id="sTime" type="range" min="0" max="100" step="1" value="20"></div>
+    <div class="btns">
+      <button id="bOrbits">轨道线</button><button id="bLabels">标签</button>
+    </div>
+    <div class="btns">
+      <button id="bTop">俯瞰全系统</button><button id="bTour">行星巡礼</button>
+    </div>
+  </div>
+</aside>
+
+<div id="hud">
+  <div id="hudL"><div class="k">NOW OBSERVING</div><div class="v" id="hudT">太阳系</div><div class="d" id="hudD">点击任意行星，驻留观察</div></div>
+  <div id="hudR">
+    <div><b>拖拽</b> 环视 · <b>滚轮</b> 远近 · <b>ESC</b> 拉远</div>
+    <div>比例经艺术压缩 · 公转周期近似真实比值</div>
+  </div>
+</div>
+
+<div id="tip"></div>
+<div id="loader"><div class="t">太 阳 系</div><div class="b"><i id="ldbar"></i></div></div>
+
+<script src="lib/three.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>林澈 · 创意技术工程师 | 一纸折境</title>
+<style>
+:root{
+  --acc:#c98a3a; --acc2:#f2d9a8; --paper:#f5efe2; --paper2:#e8ddc8;
+  --ink:#2c2a26; --muted:#8a8478; --line:rgba(60,56,48,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:#efe9dc;color:var(--ink);overflow:hidden;
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;user-select:none}
+canvas#bg{position:fixed;inset:0;display:block;z-index:0;background:#efe9dc;cursor:grab;touch-action:none}
+canvas#bg.grabbing{cursor:grabbing}
+#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 44%,rgba(0,0,0,0) 42%,rgba(80,70,50,.16) 76%,rgba(60,50,35,.4) 100%)}
+#nav{position:fixed;top:0;left:0;right:0;z-index:22;display:flex;align-items:center;justify-content:space-between;
+  padding:13px 26px;background:linear-gradient(180deg,rgba(239,233,220,.88),rgba(239,233,220,0))}
+#logo{font-weight:800;letter-spacing:.16em;font-size:14px;display:flex;align-items:center;gap:10px;color:var(--ink)}
+#logo i{width:9px;height:9px;border-radius:2px;background:var(--acc);display:inline-block;animation:pulse 2.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5;transform:rotate(45deg) scale(.8)}50%{opacity:1;transform:rotate(45deg) scale(1.1)}}
+#logo small{font-weight:400;letter-spacing:.06em;color:var(--muted);font-size:11px}
+#nav ul{display:flex;gap:20px;list-style:none}
+#nav a{color:var(--muted);text-decoration:none;font-size:12.5px;letter-spacing:.1em;cursor:pointer;
+  transition:.25s;padding:5px 2px;border-bottom:1px solid transparent}
+#nav a:hover,#nav a.active{color:var(--acc);border-bottom-color:var(--acc)}
+@media(max-width:820px){#nav ul{gap:12px}#nav a{font-size:11px}#logo small{display:none}}
+#overlay{position:fixed;inset:0;z-index:8;pointer-events:none}
+.pn{position:absolute;left:0;top:0;width:600px;transform-origin:50% 50%;opacity:0;will-change:transform,opacity;pointer-events:none}
+.pn-in{position:relative;width:600px;padding:24px 28px 26px;
+  background:linear-gradient(165deg,rgba(250,246,236,.96),rgba(240,232,214,.94));
+  border:1px solid rgba(60,56,48,.22);border-radius:2px;
+  box-shadow:0 18px 44px rgba(90,80,60,.22),0 1px 3px rgba(90,80,60,.15)}
+.pn-in::before{content:"";position:absolute;inset:6px;border:1px dashed rgba(60,56,48,.18);pointer-events:none}
+.pn.on .pn-in{border-color:var(--acc);box-shadow:0 22px 54px rgba(90,80,60,.3),0 0 30px rgba(201,138,58,.18)}
+.pn-hd{display:flex;align-items:baseline;gap:12px;margin-bottom:13px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.pn-nm{font-size:22px;color:var(--acc);line-height:1;font-weight:700}
+.pn-tt{font-size:12px;letter-spacing:.26em;color:var(--muted)}
+.pn-sub{font-size:14.5px;color:var(--ink);line-height:1.85;margin-bottom:12px}
+.pn-sub b{color:var(--acc);font-weight:600}
+.row{display:flex;gap:24px;flex-wrap:wrap}
+.col{flex:1;min-width:190px}
+.lbl{font-size:10.5px;letter-spacing:.2em;color:var(--muted);margin:8px 0 7px}
+.bar{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.bar span{width:84px;font-size:12px;color:var(--ink);opacity:.86}
+.bar i{flex:1;height:5px;background:rgba(60,56,48,.12);border-radius:1px;overflow:hidden;display:block}
+.bar i u{display:block;height:100%;background:repeating-linear-gradient(90deg,var(--acc) 0 6px,var(--acc2) 6px 8px)}
+.bar em{width:30px;text-align:right;font-style:normal;font-size:11px;color:var(--muted)}
+.card{border:1px solid var(--line);border-left:3px solid var(--acc);padding:10px 14px;margin-bottom:9px;background:rgba(255,255,255,.5);cursor:pointer;transition:.22s}
+.card:hover{background:#fff;transform:translateX(4px)}
+.card h4{font-size:14px;color:var(--acc);margin-bottom:3px}
+.card p{font-size:11.5px;color:var(--muted);line-height:1.7}
+.tl{position:relative;padding-left:16px}
+.tl::before{content:"";position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:repeating-linear-gradient(180deg,var(--acc) 0 4px,transparent 4px 8px)}
+.tl li{list-style:none;position:relative;margin-bottom:11px}
+.tl li::before{content:"";position:absolute;left:-16px;top:5px;width:8px;height:8px;background:var(--acc);transform:rotate(45deg);border-radius:1px}
+.tl h5{font-size:13px;color:var(--ink)}
+.tl time{font-size:10.5px;color:var(--acc);display:block;margin-bottom:2px}
+.tl p{font-size:11.5px;color:var(--muted);line-height:1.65}
+.contacts{display:flex;gap:9px;flex-wrap:wrap;margin-top:4px}
+.contacts a{font-size:11.5px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:7px 13px;background:rgba(255,255,255,.6);transition:.22s;pointer-events:auto}
+.contacts a:hover{border-color:var(--acc);color:var(--acc);background:#fff}
+.hintline{font-size:10.5px;color:var(--muted);margin-top:11px;opacity:.85}
+#hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:16px 26px;pointer-events:none;background:linear-gradient(0deg,rgba(239,233,220,.9),rgba(239,233,220,0))}
+#hudL .k{font-size:9.5px;letter-spacing:.3em;color:var(--acc)}
+#hudL .v{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:.05em}
+#hudL .d{font-size:11px;color:var(--muted);margin-top:2px}
+#foldgauge{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+#foldgauge b{font-size:24px;font-weight:800;color:var(--acc);font-variant-numeric:tabular-nums}
+#foldgauge span{font-size:10px;color:var(--muted);letter-spacing:.2em}
+#hudR{text-align:right;font-size:10.5px;color:var(--muted);line-height:1.9}
+#hudR b{color:var(--ink);font-weight:500}
+#dock{position:fixed;right:22px;top:78px;z-index:21;width:200px;padding:14px 15px 15px;
+  background:rgba(250,246,236,.92);border:1px solid var(--line);border-radius:2px;box-shadow:0 18px 44px rgba(90,80,60,.2)}
+#dock h3{font-size:10px;letter-spacing:.24em;color:var(--acc);margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:8px;display:flex;justify-content:space-between}
+#dock h3 button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px}
+#dock.min #dockBody{display:none}
+.ctrl{margin-bottom:11px}
+.ctrl label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:5px}
+.ctrl label b{color:var(--ink);font-weight:500}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:rgba(60,56,48,.18);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:2px;background:var(--acc);transform:rotate(45deg);cursor:pointer}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.btns button{flex:1;min-width:54px;font-size:10.5px;padding:6px 4px;cursor:pointer;
+  background:rgba(255,255,255,.6);border:1px solid var(--line);color:var(--muted);border-radius:2px;transition:.2s}
+.btns button:hover{color:var(--acc);border-color:var(--acc)}
+.btns button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+#tip{position:fixed;z-index:24;pointer-events:none;padding:6px 10px;font-size:11px;
+  background:rgba(250,246,236,.95);border:1px solid rgba(201,138,58,.5);color:var(--acc);
+  border-radius:2px;opacity:0;transform:translate(14px,14px);white-space:nowrap;box-shadow:0 4px 10px rgba(90,80,60,.15)}
+#loader{position:fixed;inset:0;z-index:60;background:#efe9dc;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;transition:opacity .8s}
+#loader .t{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:.34em}
+#loader .b{width:190px;height:2px;background:rgba(60,56,48,.15)}
+#loader .b i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+#loader.gone{opacity:0;visibility:hidden;pointer-events:none}
+@media(max-width:900px){#dock{display:none}#hudR{display:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="vignette"></div>
+<nav id="nav">
+  <div id="logo"><i></i>林澈 <small>CREATIVE TECHNOLOGIST</small></div>
+  <ul>
+    <li><a class="wp" data-wp="about">方盒</a></li>
+    <li><a class="wp" data-wp="skills">技艺</a></li>
+    <li><a class="wp" data-wp="works">作品</a></li>
+    <li><a class="wp" data-wp="journey">折痕</a></li>
+    <li><a class="wp" data-wp="contact">封口</a></li>
+  </ul>
+</nav>
+<div id="overlay">
+  <article class="pn" id="pn-about">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">壹</div><div><div class="pn-tt">BOX / 方盒</div></div></div>
+      <p class="pn-sub">我是<b>林澈</b>，创意技术工程师。一张平面的纸，折七次就能变成一只立得住的盒子——<b>维度是被折出来的。</b></p>
+      <p class="pn-sub">我做的每个项目都是一次折纸：先有一张平的方案，然后沿着一条条<b>折痕</b>把想法立起来。折痕就是约束，而约束恰恰是造型本身。</p>
+      <div class="hintline">▸ 拖拽旋转 · 滚轮控制中央折盒的开合 · 点击四周纸盒展开内容</div>
+    </div>
+  </article>
+  <article class="pn" id="pn-skills">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">贰</div><div><div class="pn-tt">SKILLS / 技艺</div></div></div>
+      <div class="row">
+        <div class="col">
+          <div class="lbl">折痕一 · 台前</div>
+          <div class="bar"><span>WebGL / Three</span><i><u style="width:95%"></u></i><em>95</em></div>
+          <div class="bar"><span>GLSL</span><i><u style="width:86%"></u></i><em>86</em></div>
+          <div class="bar"><span>TypeScript</span><i><u style="width:90%"></u></i><em>90</em></div>
+        </div>
+        <div class="col">
+          <div class="lbl">折痕二 · 幕后</div>
+          <div class="bar"><span>程序化建模</span><i><u style="width:82%"></u></i><em>82</em></div>
+          <div class="bar"><span>动效叙事</span><i><u style="width:85%"></u></i><em>85</em></div>
+          <div class="bar"><span>装置联动</span><i><u style="width:73%"></u></i><em>73</em></div>
+        </div>
+      </div>
+    </div>
+  </article>
+  <article class="pn" id="pn-works">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">叁</div><div><div class="pn-tt">WORKS / 作品</div></div></div>
+      <div class="card"><h4>《长明火》— 实时火山模拟</h4><p>GPU 粒子热对流近似，四十万颗粒子稳定 60fps。</p></div>
+      <div class="card"><h4>《视界之外》— 引力透镜可视化</h4><p>raymarching 求解光线偏折，把黑洞做成可行走的场景。</p></div>
+      <div class="card"><h4>《九驾》— 西周车马复原</h4><p>按考古报告重建车马器比例，知识做进交互里。</p></div>
+    </div>
+  </article>
+  <article class="pn" id="pn-journey">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">肆</div><div><div class="pn-tt">CREASES / 折痕</div></div></div>
+      <ul class="tl">
+        <li><time>2023 — 至今</time><h5>独立创意技术</h5><p>为品牌与美术馆做实时图形装置。</p></li>
+        <li><time>2020 — 2023</time><h5>互娱科技 · 高级前端</h5><p>渲染管线、性能与动效体系。</p></li>
+        <li><time>2018 — 2020</time><h5>数字工作室 · 交互开发</h5><p>线下装置与机构控制。</p></li>
+      </ul>
+    </div>
+  </article>
+  <article class="pn" id="pn-contact">
+    <div class="pn-in">
+      <div class="pn-hd"><div class="pn-nm">伍</div><div><div class="pn-tt">SEAL / 封口</div></div></div>
+      <p class="pn-sub">盒子折到最后一步是封口。想把什么放进这只盒子，都可以寄给我——</p>
+      <div class="contacts">
+        <a href="mailto:hello@linche.studio">✉ hello@linche.studio</a>
+        <a>GitHub / linche</a>
+        <a>微信 / linche_dev</a>
+      </div>
+      <div class="hintline">▸ 折到 100% 时盒子会自己立起来</div>
+    </div>
+  </article>
+</div>
+<aside id="dock">
+  <h3><span>折纸台 / FOLDING</span><button id="dockTg">—</button></h3>
+  <div id="dockBody">
+    <div class="ctrl"><label>折叠进度 <b id="vFold">自动</b></label><input id="sFold" type="range" min="0" max="100" step="1" value="50"></div>
+    <div class="btns"><button id="bAuto">自动演示</button><button id="bFlat">展平</button><button id="bBox">成盒</button></div>
+    <div class="btns"><button id="bTour">开启纸盒</button></div>
+  </div>
+</aside>
+<div id="hud">
+  <div id="hudL"><div class="k">NOW FOLDING</div><div class="v" id="hudT">一纸折境</div><div class="d" id="hudD">维度是被折出来的</div>
+    <div id="foldgauge"><b id="foldV">50</b><span>% · 折叠度</span></div></div>
+  <div id="hudR">
+    <div><b>拖拽</b> 旋转 · <b>滚轮</b> 折叠</div>
+    <div><b>点击纸盒</b> 展开内容 · <b>ESC</b> 复位</div>
+  </div>
+</div>
+<div id="tip"></div>
+<div id="loader"><div class="t">一 纸 折 境</div><div class="b"><i id="ldbar"></i></div></div>
+<script src="lib/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+var V3 = THREE.Vector3;
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function rnd(a,b){ return a+Math.random()*(b-a); }
+var canvas = document.getElementById('bg');
+var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.8));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0xefe9dc);
+scene.fog = new THREE.Fog(0xefe9dc, 60, 190);
+var camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 400);
+
+function mkCanvas(w,h){ var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+function paperTexture(shade){
+  var c=mkCanvas(256,256), x=c.getContext('2d');
+  x.fillStyle=shade; x.fillRect(0,0,256,256);
+  for(var i=0;i<900;i++){
+    x.fillStyle='rgba(120,100,70,'+(Math.random()*0.05)+')';
+    x.fillRect(Math.random()*256, Math.random()*256, Math.random()*20+2, 1);
+  }
+  var t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=4; return t;
+}
+function deskTexture(){
+  var c=mkCanvas(512,512), x=c.getContext('2d');
+  x.fillStyle='#d8cdb4'; x.fillRect(0,0,512,512);
+  for(var i=0;i<60;i++){
+    x.strokeStyle='rgba(140,120,85,'+(Math.random()*0.09)+')';
+    x.lineWidth=1+Math.random()*2;
+    x.beginPath(); var y=Math.random()*512; x.moveTo(0,y);
+    for(var k=0;k<6;k++){ x.lineTo(Math.random()*512, y+rnd(-14,14)); }
+    x.stroke();
+  }
+  var t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(6,6); return t;
+}
+function radialSprite(inner, outer){
+  var c=mkCanvas(128,128), x=c.getContext('2d');
+  var g=x.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,inner); g.addColorStop(1,outer);
+  x.fillStyle=g; x.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+}
+
+scene.add(new THREE.HemisphereLight(0xfff4e0, 0xb0a488, 0.85));
+var key = new THREE.DirectionalLight(0xfff0d8, 0.95);
+key.position.set(18, 30, 14);
+key.castShadow = true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.near=1; key.shadow.camera.far=90;
+key.shadow.camera.left=-40; key.shadow.camera.right=40;
+key.shadow.camera.top=40; key.shadow.camera.bottom=-40;
+key.shadow.bias=-0.0006;
+scene.add(key);
+var warm = new THREE.DirectionalLight(0xffe0b0, 0.3); warm.position.set(-20, 12, -18); scene.add(warm);
+
+(function(){
+  var desk = new THREE.Mesh(new THREE.PlaneGeometry(300,300), new THREE.MeshPhongMaterial({map:deskTexture(), shininess:4}));
+  desk.rotation.x = -Math.PI/2; desk.position.y = -2;
+  desk.receiveShadow = true; scene.add(desk);
+})();
+
+function makeBox(size, height, isDemo){
+  var g = new THREE.Group();
+  var tex = paperTexture(isDemo ? '#f7f2e6' : '#efe6d2');
+  var mat = new THREE.MeshPhongMaterial({map:tex, side:THREE.DoubleSide, shininess:6, specular:0x2a2620});
+  var creaseMat = new THREE.LineBasicMaterial({color:0xb0a080, transparent:true, opacity:0.6});
+  var bottom = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
+  bottom.rotation.x = -Math.PI/2;
+  bottom.receiveShadow = true; bottom.castShadow = true;
+  g.add(bottom);
+  var cpts = [ new V3(-size/2,0.01,0), new V3(size/2,0.01,0), new V3(0,0.01,-size/2), new V3(0,0.01,size/2) ];
+  g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(cpts), creaseMat));
+
+  var walls = [];
+  var defs = [
+    {axis:'z', pos:[0, 0, -size/2], meshRot:[-Math.PI/2, 0, 0],        pivotAxis:'x', pivotSign: 1},
+    {axis:'z', pos:[0, 0,  size/2], meshRot:[ Math.PI/2, 0, 0],        pivotAxis:'x', pivotSign:-1},
+    {axis:'x', pos:[-size/2, 0, 0], meshRot:[ Math.PI/2,-Math.PI/2,0], pivotAxis:'z', pivotSign:-1},
+    {axis:'x', pos:[ size/2, 0, 0], meshRot:[ Math.PI/2, Math.PI/2,0], pivotAxis:'z', pivotSign: 1}
+  ];
+  defs.forEach(function(d){
+    var pivot = new THREE.Group();
+    pivot.position.set(d.pos[0], 0, d.pos[2]);
+    var wall = new THREE.Mesh(new THREE.PlaneGeometry(size, height), mat);
+    wall.geometry.translate(0, height/2, 0);
+    if(d.axis==='z'){ wall.rotation.x = d.meshRot[0]; }
+    else { wall.rotation.order='YXZ'; wall.rotation.set(d.meshRot[0], d.meshRot[1], 0); }
+    wall.castShadow = true; wall.receiveShadow = true;
+    pivot.add(wall); g.add(pivot);
+    walls.push({pivot:pivot, wall:wall, def:d});
+  });
+  return {group:g, walls:walls, size:size, height:height};
+}
+function setBoxFold(box, t){
+  var ang = t * Math.PI/2;
+  box.walls.forEach(function(w){
+    var d = w.def, a = ang * d.pivotSign;
+    if(d.pivotAxis==='x'){ w.pivot.rotation.x = a; }
+    else { w.pivot.rotation.z = a; }
+  });
+}
+
+var demoBox = makeBox(7, 4.5, true);
+demoBox.group.position.set(0, 0, 0);
+scene.add(demoBox.group);
+
+var UNITS = [
+  {key:'about',   a:0,    d:16, tx:'方盒',   st:'BOX'},
+  {key:'skills',  a:72,   d:17, tx:'技艺',   st:'SKILLS'},
+  {key:'works',   a:144,  d:16, tx:'作品',   st:'WORKS'},
+  {key:'journey', a:216,  d:17, tx:'折痕',   st:'CREASES'},
+  {key:'contact', a:288,  d:16, tx:'封口',   st:'SEAL'}
+];
+var panels = [], boxHits = [], contentBoxes = [];
+UNITS.forEach(function(c){
+  var rad = c.a*Math.PI/180;
+  var bx = Math.cos(rad)*c.d, bz = Math.sin(rad)*c.d;
+  var box = makeBox(3.4, 2.2, false);
+  box.group.position.set(bx, 0, bz);
+  box.group.rotation.y = -rad + Math.PI/2;
+  scene.add(box.group);
+  setBoxFold(box, 1);
+  contentBoxes.push({cfg:c, box:box, open:0, base:box.group.position.clone()});
+  var nrm = new V3(Math.cos(rad), 0, Math.sin(rad));
+  var el = document.getElementById('pn-'+c.key);
+  panels.push({
+    key:c.key, cfg:c, el:el,
+    pos:new V3(bx+nrm.x*2.2, 4.6, bz+nrm.z*2.2),
+    nrm:nrm, right:new V3(nrm.z,0,-nrm.x),
+    cssW: el.offsetWidth||600, w:7.6
+  });
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(4.2, 3.4, 4.2), new THREE.MeshBasicMaterial({visible:false}));
+  hit.position.set(bx, 1.4, bz);
+  hit.userData.box = c.key; scene.add(hit); boxHits.push(hit);
+});
+
+(function(){
+  var tex = paperTexture('#f2ecdc');
+  var mat = new THREE.MeshPhongMaterial({map:tex, side:THREE.DoubleSide, shininess:4});
+  for(var i=0;i<14;i++){
+    var s = rnd(1.2,2.6);
+    var p = new THREE.Mesh(new THREE.PlaneGeometry(s, s*0.72), mat);
+    p.rotation.set(-Math.PI/2 + rnd(-0.5,0.2), rnd(0,6.28), rnd(-0.3,0.3));
+    var a = rnd(0,6.28), d = rnd(24, 62);
+    p.position.set(Math.cos(a)*d, -1.95, Math.sin(a)*d);
+    p.receiveShadow = true; scene.add(p);
+  }
+})();
+
+var _pv=new V3(), _pr=new V3();
+function projectPanel(el, pos, nrm, right, w, cssW, active){
+  var facing = camera.position.clone().sub(pos).normalize().dot(nrm);
+  _pv.copy(pos).project(camera);
+  _pr.copy(pos).addScaledVector(right, w*0.5).project(camera);
+  var behind = _pv.z > 1;
+  var x1=(_pv.x*0.5+0.5)*window.innerWidth, y1=(-_pv.y*0.5+0.5)*window.innerHeight;
+  var x2=(_pr.x*0.5+0.5)*window.innerWidth, y2=(-_pr.y*0.5+0.5)*window.innerHeight;
+  var dx=x2-x1, dy=y2-y1;
+  var pxW = Math.sqrt(dx*dx+dy*dy)*2;
+  var ang = Math.atan2(dy,dx)*180/Math.PI;
+  var s = clamp(pxW/cssW, 0.05, 1.6);
+  var op = (behind || facing<0.02) ? 0 : clamp(facing*3.0, 0, 1);
+  if(camera.position.distanceTo(pos) > 160) op = 0;
+  el.style.transform = 'translate3d('+x1.toFixed(1)+'px,'+y1.toFixed(1)+'px,0) translate(-50%,-50%) rotate('+ang.toFixed(2)+'deg) scale('+s.toFixed(3)+')';
+  el.style.opacity = op.toFixed(3);
+  el.style.pointerEvents = (op>0.4 && s>0.3) ? 'auto' : 'none';
+  el.classList.toggle('on', !!active);
+}
+function updatePanels(){
+  for(var i=0;i<panels.length;i++){
+    var p=panels[i], opened=false;
+    for(var k=0;k<contentBoxes.length;k++){
+      if(contentBoxes[k].cfg.key===p.key && contentBoxes[k].open>0.5){ opened=true; break; }
+    }
+    projectPanel(p.el, p.pos, p.nrm, p.right, p.w, p.cssW, opened);
+  }
+}
+
+var rig = { target:new V3(0,2.2,0), yaw:0.7, pitch:0.42, dist:34, tTarget:new V3(0,2.2,0), tYaw:0.7, tPitch:0.42, tDist:34, tween:0, dur:1.5, active:false };
+function flyTo(o, dur){
+  rig.tTarget.set(o.t[0],o.t[1],o.t[2]);
+  rig.tYaw=o.yaw; rig.tPitch=o.pitch; rig.tDist=o.dist;
+  rig.active=true; rig.tween=0; rig.dur=dur||1.5;
+}
+function updateRig(dt){
+  if(rig.active){
+    rig.tween += dt/rig.dur;
+    var e = rig.tween<0.5 ? 4*rig.tween*rig.tween*rig.tween : 1-Math.pow(-2*rig.tween+2,3)/2;
+    rig.target.lerp(rig.tTarget, clamp(e*0.13+0.01,0,1));
+    rig.yaw   = lerp(rig.yaw, rig.tYaw, clamp(e*0.12+0.01,0,1));
+    rig.pitch = lerp(rig.pitch, rig.tPitch, clamp(e*0.12+0.01,0,1));
+    rig.dist  = lerp(rig.dist, rig.tDist, clamp(e*0.12+0.01,0,1));
+    if(rig.tween>=1.5) rig.active=false;
+  } else if(!drag.on){ rig.yaw += dt*0.02; }
+  var cp=Math.cos(rig.pitch), sp=Math.sin(rig.pitch);
+  camera.position.set(rig.target.x + Math.sin(rig.yaw)*cp*rig.dist, rig.target.y + sp*rig.dist, rig.target.z + Math.cos(rig.yaw)*cp*rig.dist);
+  camera.lookAt(rig.target);
+}
+var activeKey = null;
+function setHud(name, desc){
+  document.getElementById('hudT').textContent = name;
+  document.getElementById('hudD').textContent = desc;
+  var as = document.querySelectorAll('#nav a.wp');
+  for(var i=0;i<as.length;i++) as[i].classList.toggle('active', as[i].dataset.wp===activeKey);
+}
+function focusUnit(k){
+  for(var i=0;i<contentBoxes.length;i++){
+    if(contentBoxes[i].cfg.key===k){
+      activeKey = k; contentBoxes[i].open = 1;
+      flyTo({t:[contentBoxes[i].base.x*0.55, 3.4, contentBoxes[i].base.z*0.55], yaw:Math.atan2(contentBoxes[i].base.x, contentBoxes[i].base.z), pitch:0.3, dist:13}, 1.4);
+      setHud(contentBoxes[i].cfg.tx, contentBoxes[i].cfg.st);
+      return;
+    }
+  }
+}
+function goOverview(){
+  activeKey = null;
+  for(var i=0;i<contentBoxes.length;i++) contentBoxes[i].open = 0;
+  flyTo({t:[0,2.2,0], yaw:rig.yaw, pitch:0.42, dist:34}, 1.5);
+  setHud('一纸折境','维度是被折出来的');
+}
+
+var drag = {on:false, x:0, y:0, moved:0};
+var ray = new THREE.Raycaster(), mouse = {x:0,y:0,moved:false};
+var tipEl = document.getElementById('tip');
+canvas.addEventListener('pointerdown', function(e){
+  drag.on=true; drag.x=e.clientX; drag.y=e.clientY; drag.moved=0;
+  canvas.classList.add('grabbing');
+  if(canvas.setPointerCapture){ try{ canvas.setPointerCapture(e.pointerId); }catch(err){} }
+});
+window.addEventListener('pointermove', function(e){
+  if(drag.on){
+    var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    drag.moved += Math.abs(dx)+Math.abs(dy);
+    rig.yaw -= dx*0.005;
+    rig.pitch = clamp(rig.pitch + dy*0.003, 0.08, 1.2);
+    drag.x=e.clientX; drag.y=e.clientY;
+    rig.active=false;
+  }
+  mouse.x=(e.clientX/window.innerWidth)*2-1; mouse.y=-(e.clientY/window.innerHeight)*2+1; mouse.moved=true;
+  tipEl.style.left=e.clientX+'px'; tipEl.style.top=e.clientY+'px';
+});
+window.addEventListener('pointerup', function(e){
+  if(drag.on && drag.moved<6) doPick(e.clientX, e.clientY);
+  drag.on=false; canvas.classList.remove('grabbing');
+});
+canvas.addEventListener('wheel', function(e){
+  e.preventDefault();
+  if(e.ctrlKey || e.shiftKey){
+    foldManual = clamp(foldManual + (e.deltaY>0?-0.06:0.06), 0, 1);
+    autoFold = false;
+    document.getElementById('bAuto').classList.remove('on');
+    document.getElementById('sFold').value = Math.round(foldManual*100);
+  } else {
+    rig.dist = clamp(rig.dist*(e.deltaY>0?1.09:0.92), 10, 90);
+    rig.active=false;
+  }
+},{passive:false});
+window.addEventListener('keydown', function(e){ if(e.key==='Escape') goOverview(); });
+function doPick(px,py){
+  mouse.x=(px/window.innerWidth)*2-1; mouse.y=-(py/window.innerHeight)*2+1;
+  ray.setFromCamera(mouse, camera);
+  var hits = ray.intersectObjects(boxHits, false);
+  if(hits.length){
+    var k = hits[0].object.userData.box, rec=null;
+    for(var i=0;i<contentBoxes.length;i++) if(contentBoxes[i].cfg.key===k) rec = contentBoxes[i];
+    if(rec){
+      if(activeKey===k){ rec.open=0; activeKey=null; goOverview(); }
+      else focusUnit(k);
+    }
+  }
+}
+function hoverTip(){
+  if(drag.on || !mouse.moved){ tipEl.style.opacity=0; return; }
+  ray.setFromCamera(mouse, camera);
+  var hits = ray.intersectObjects(boxHits, false);
+  if(hits.length){
+    var k = hits[0].object.userData.box, nm='';
+    for(var i=0;i<UNITS.length;i++) if(UNITS[i].key===k) nm=UNITS[i].tx;
+    tipEl.textContent = '展开「'+nm+'」'; tipEl.style.opacity=0.95; canvas.style.cursor='pointer';
+  } else { tipEl.style.opacity=0; canvas.style.cursor=drag.on?'grabbing':'grab'; }
+}
+
+var foldManual = 0.5, autoFold = true, demoT = 0;
+function bindSlider(id, cb){
+  var el=document.getElementById(id);
+  el.addEventListener('input', function(){ cb(parseFloat(el.value)); });
+  cb(parseFloat(el.value));
+}
+bindSlider('sFold', function(v){ foldManual=v/100; autoFold=false; document.getElementById('bAuto').classList.remove('on'); });
+var autoBtn = document.getElementById('bAuto');
+autoBtn.classList.add('on');
+autoBtn.onclick = function(){ autoFold=true; autoBtn.classList.add('on'); };
+document.getElementById('bFlat').onclick = function(){ autoFold=false; foldManual=0; autoBtn.classList.remove('on'); document.getElementById('sFold').value=0; };
+document.getElementById('bBox').onclick = function(){ autoFold=false; foldManual=1; autoBtn.classList.remove('on'); document.getElementById('sFold').value=100; };
+var tourBtn = document.getElementById('bTour');
+var tour = {on:false, i:0, t:0};
+tourBtn.onclick = function(){ tour.on=!tour.on; tourBtn.classList.toggle('on', tour.on); };
+document.getElementById('dockTg').onclick = function(){ document.getElementById('dock').classList.toggle('min'); };
+var navLinks = document.querySelectorAll('#nav a.wp');
+for(var ni=0;ni<navLinks.length;ni++){
+  navLinks[ni].addEventListener('click', function(){ focusUnit(this.dataset.wp); });
+}
+
+var clock = new THREE.Clock(), timeNow = 0, tipT = 0;
+var foldVEl = document.getElementById('foldV');
+setHud('一纸折境','维度是被折出来的');
+function animate(){
+  requestAnimationFrame(animate);
+  var dt = Math.min(clock.getDelta(), 0.05);
+  timeNow += dt;
+  if(autoFold){
+    demoT += dt*0.25;
+    foldManual = (Math.sin(demoT)*0.5+0.5);
+    document.getElementById('sFold').value = Math.round(foldManual*100);
+  }
+  var fold = foldManual<0.5 ? 2*foldManual*foldManual : 1-Math.pow(-2*foldManual+2,2)/2;
+  setBoxFold(demoBox, fold);
+  foldVEl.textContent = Math.round(foldManual*100);
+  for(var i=0;i<contentBoxes.length;i++){
+    var cb = contentBoxes[i];
+    cb.open = lerp(cb.open, cb.open>0.5?1:0, 1-Math.pow(0.02, dt));
+    var extra = cb.open * 0.9;
+    setBoxFold(cb.box, 1);
+    cb.box.walls[1].pivot.rotation.x = Math.PI/2 + extra;
+  }
+  if(tour.on){
+    tour.t += dt;
+    if(tour.t > 6){ tour.t=0; tour.i=(tour.i+1)%contentBoxes.length; focusUnit(contentBoxes[tour.i].cfg.key); }
+  }
+  updateRig(dt);
+  updatePanels();
+  tipT += dt;
+  if(tipT>0.1){ tipT=0; hoverTip(); }
+  renderer.render(scene, camera);
+}
+animate();
+window.addEventListener('resize', function(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+setTimeout(function(){
+  document.getElementById('ldbar').style.width='100%';
+  setTimeout(function(){ document.getElementById('loader').classList.add('gone'); }, 280);
+}, 500);
+})();
+</script>
+</body>
+</html>
